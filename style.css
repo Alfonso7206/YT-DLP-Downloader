@@ -1,0 +1,209 @@
+/* ===================== DARK/LIGHT THEME ===================== */
+body[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --video-bg: #1a1a1a;
+    --video-border: #333;
+    --video-hover: #2a2a2a;
+    --select-bg: #1c1c1c;
+    --select-border: #444;
+    --button-bg: #2a2a2a;
+    --button-hover: #3a3a3a;
+    --progress-bg: #2a2a2a;
+    --progress-fill: #2196F3;
+    --spinner-color: #2196F3;
+}
+
+body[data-theme="light"] {
+    --bg-color: #fff;
+    --text-color: #000;
+    --video-bg: #f5f5f5;
+    --video-border: #ccc;
+    --video-hover: #e0e0e0;
+    --select-bg: #fff;
+    --select-border: #aaa;
+    --button-bg: #eee;
+    --button-hover: #ddd;
+    --progress-bg: #ddd;
+    --progress-fill: #2196F3;
+    --spinner-color: #2196F3;
+}
+
+/* ===================== BODY & FONT ===================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+/* ===================== VIDEO LIST ===================== */
+#videoList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ===================== SINGOLO VIDEO ITEM ===================== */
+.video-item {
+    display: flex;
+    align-items: center;
+    background-color: var(--video-bg);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid var(--video-border) !important;
+    box-shadow: inset 0 0 0 1px var(--video-border);
+    transition: background 0.2s, border 0.2s;
+}
+
+.video-item:hover {
+    background-color: var(--video-hover);
+}
+
+/* ===================== THUMBNAIL ===================== */
+.video-item img.thumbnail {
+    width: 200px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+/* ===================== HOVER MINIATURE ===================== */
+.video-item img.thumbnail {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+/* DARK THEME: glow bianco soft */
+body[data-theme="dark"] .video-item img.thumbnail:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.4); /* bianco soft */
+}
+
+/* LIGHT THEME: glow nero soft */
+body[data-theme="light"] .video-item img.thumbnail:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 10px 3px rgba(0, 0, 0, 0.3); /* nero soft */
+}
+
+/* ===================== VIDEO INFO ===================== */
+.video-info {
+    flex-grow: 1;
+}
+
+.video-info strong {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.video-info select {
+    margin-top: 5px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--select-border);
+    background-color: var(--select-bg);
+    color: var(--text-color);
+}
+
+.video-info .status {
+    margin-top: 3px;
+    font-size: 13px;
+    color: #b0b0b0;
+}
+
+/* ===================== BUTTONS ===================== */
+button {
+    padding: 5px 10px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: var(--button-hover);
+}
+
+/* ===================== TEXTAREA ===================== */
+textarea#urlArea {
+    width: 95%;
+    max-width: 900px;
+    min-height: 70px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--video-border);
+    background-color: var(--select-bg);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    display: block;
+    margin: 0 auto 20px auto;
+    transition: border 0.2s, background 0.2s;
+}
+
+textarea#urlArea:focus {
+    border-color: var(--video-border);
+    background-color: var(--video-hover);
+}
+
+/* ===================== PROGRESS BAR ===================== */
+.progress-bar-container {
+    width: 100%;
+    background-color: var(--progress-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    height: 10px;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--progress-fill);
+    width: 0%;
+    transition: width 0.2s ease;
+    border-radius: 4px;
+}
+
+/* ===================== POPUP THUMBNAIL ===================== */
+#thumbnail-popup {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    width: 320px;
+    border: 1px solid var(--select-border);
+    border-radius: 4px;
+    display: none;
+    z-index: 1000;
+}
+
+/* ===================== SPINNER ===================== */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid var(--spinner-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

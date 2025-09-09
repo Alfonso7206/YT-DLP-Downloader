@@ -1,0 +1,50 @@
+{
+  "name": "yt-dlp-gui",
+  "version": "1.0.0",
+  "description": "YT-DLP Downloader",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.alfonsoleoni.yt-dlp-gui",
+    "publisherDisplayName": "Alfonso Leoni",
+    "productName": "YT-DLP Downloader",
+    "displayName": "YT-DLP Downloader",
+    "author": "Alfonso Leoni",
+    "applicationId": "YT-DLPDownloader",
+    "copyright": "Copyright © 2025 Alfonso Leoni",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*.md",
+      "!**/bin/**"
+    ],
+    "extraResources": [
+      {
+        "from": "bin/",
+        "to": "bin",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^26.2.0",
+    "electron-builder": "^24.6.0"
+  }
+}
