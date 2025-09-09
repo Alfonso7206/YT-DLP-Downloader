@@ -1,7 +1,7 @@
 {
-  "name": "youtube-downloader",
+  "name": "YTDLP-Downloader",
   "version": "1.0.0",
-  "description": "Downloader video e audio da YouTube con Electron e yt-dlp",
+  "description": "Downloader video e audio",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -9,8 +9,8 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.example.ytdl",
-    "productName": "YT Downloader",
+    "appId": "com.ytdlpdownloader.ytdl",
+    "productName": "AL YT-DLP Downloader",
     "directories": {
       "buildResources": "assets",
       "output": "dist"
