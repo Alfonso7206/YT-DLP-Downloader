@@ -22,13 +22,6 @@ const audioOnlyChk = document.getElementById("audioOnlyChk");
 // if (!localStorage.getItem("theme")) localStorage.setItem("theme", "dark");
 // document.body.dataset.theme = localStorage.getItem("theme");
 
-// --- Toggle tema
-themeToggle.onclick = () => {
-    const current = document.body.dataset.theme;
-    const next = current === "dark" ? "light" : "dark";
-    document.body.dataset.theme = next;
-    localStorage.setItem("theme", next);
-};
 
 // --- Bottoni cartella
 document.getElementById("openFolderBtn").addEventListener("click", () => ipcRenderer.invoke("open-folder"));
@@ -241,12 +234,7 @@ urlArea.addEventListener("drop", e => {
         reader.readAsText(file);
     } else alert("Trascina un file di testo (.txt)");
 });
-const themeBtn = document.getElementById("themeToggle");
-themeBtn.addEventListener("click", () => {
-    const body = document.body;
-    body.dataset.theme = body.dataset.theme === "dark" ? "light" : "dark";
-});
-//
+
 // --- DARK/LIGHT TOGGLE ---
 document.addEventListener("DOMContentLoaded", () => {
     const themeToggle = document.getElementById("themeToggle");
