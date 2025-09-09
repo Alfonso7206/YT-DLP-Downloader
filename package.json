@@ -1,7 +1,7 @@
 {
-  "name": "yt-dlp-gui",
+  "name": "youtube-downloader",
   "version": "1.0.0",
-  "description": "YT-DLP Downloader",
+  "description": "Downloader video e audio da YouTube con Electron e yt-dlp",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -9,13 +9,8 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.alfonsoleoni.yt-dlp-gui",
-    "publisherDisplayName": "Alfonso Leoni",
-    "productName": "YT-DLP Downloader",
-    "displayName": "YT-DLP Downloader",
-    "author": "Alfonso Leoni",
-    "applicationId": "YT-DLPDownloader",
-    "copyright": "Copyright © 2025 Alfonso Leoni",
+    "appId": "com.example.ytdl",
+    "productName": "YT Downloader",
     "directories": {
       "buildResources": "assets",
       "output": "dist"
@@ -23,7 +18,7 @@
     "files": [
       "**/*",
       "!node_modules/**/*.md",
-      "!**/bin/**"
+      "!**/bin/**" 
     ],
     "extraResources": [
       {
