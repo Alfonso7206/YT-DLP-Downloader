@@ -10,7 +10,7 @@
 ##### Per provare il programma in sviluppo usa > npm start da cmd o da powershell o il file Start.bat #####
 ##### Per compilarlo usa > Compile.bat #####
 ##### Puoi trasportare file .txt con i link dentro direttamente sulla textarea #####
-##### Permette la scelta di tutti i formati di yt-dlp #####
+##### Permette la scelta di tutti i formati di [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 ##### Scarica MP3 #####
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 
