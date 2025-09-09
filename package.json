@@ -1,12 +1,12 @@
 {
-  "name": "YTDLP-Downloader",
+  "name": "ytdlp-downloader",
   "version": "1.0.0",
-  "description": "Downloader video e audio",
+  "description": "Downloader video e audio con yt-dlp",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder",
-    "dist": "electron-builder"
+    "dist": "electron-builder --win --x64"
   },
   "build": {
     "appId": "com.ytdlpdownloader.ytdl",
@@ -16,17 +16,24 @@
       "output": "dist"
     },
     "files": [
-      "**/*",
-      "!node_modules/**/*.md",
-      "!**/bin/**" 
+      "main.js",
+      "index.html",
+      "renderer.js",
+      "style.css",
+      "package.json",
+      "!Bin/**",
+      "!*.bat",
+      "!*.7z",
+      "!README.md"
     ],
     "extraResources": [
       {
-        "from": "bin/",
+        "from": "Bin/",
         "to": "bin",
         "filter": ["**/*"]
       }
     ],
+    "asarUnpack": ["**/*.node"],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
