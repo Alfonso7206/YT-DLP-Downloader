@@ -18,3 +18,6 @@ below the old graphics
 ##### Scarica MP3 #####
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 
+
+###### It's so simple my grandfather could modify it 😂 ######
+
