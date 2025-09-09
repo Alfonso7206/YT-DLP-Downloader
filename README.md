@@ -3,7 +3,7 @@
 <img width="972" height="695" alt="jOx6Do0qRR" src="https://github.com/user-attachments/assets/ef322ded-ec10-4803-8f28-d030164ef121" />
 
 💬 
-#### 🎥 Prima versione Ultra ligth 🎥 ####
+#### 🎥 Prima versione Ultra light 🎥 ####
 
 ##### Richiede node.js - nella cartella del programma ci deve essere la cartella node_modules #####
 ##### Installa i file binari, lanciando il file > Scarica Binari.cmd #####
