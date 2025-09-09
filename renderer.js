@@ -216,7 +216,7 @@ ipcRenderer.on("download-complete", (event, { url, code }) => {
 
     progressBar.style.width = "100%";
     progressBar.style.backgroundColor = code === 0 ? "#4CAF50" : "#F44336";
-    statusText.textContent = code === 0 ? "✅ Completato" : "❌ Errore";
+    statusText.textContent = code === 0 ? "✅ Completato" : "💀 Errore";
     detailsText.textContent = code === 0 ? "⬇️   Completato" : "⬇️   Errore";
 
     if (stopBtn) stopBtn.remove();
