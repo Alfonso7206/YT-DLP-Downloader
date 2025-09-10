@@ -1,5 +1,7 @@
 updated graphics
-<img width="971" height="693" alt="electron_rJqJ6vGaBx" src="https://github.com/user-attachments/assets/21fe9ade-738e-4b33-b817-6505ea57d9b0" />
+<img width="971" height="693" alt="electron_juN1cDZabV" src="https://github.com/user-attachments/assets/ec24dd02-d2a9-4e39-a853-5cd344d2f34c" />
+
+
 
 below the old graphics
 <img width="1054" height="1000" alt="admlZZLa6V" src="https://github.com/user-attachments/assets/62eb5037-d196-4311-9e3f-c1979790c3df" />
