@@ -1,4 +1,4 @@
-<img width="886" height="990" alt="electron_i6iwEL8iOT" src="https://github.com/user-attachments/assets/10175f26-8663-4f9a-a2a6-8c945311a904" />
+<img width="886" height="990" alt="electron_i6iwEL8iOT" src="https://github.com/user-attachments/assets/d910f6ee-0729-4bc2-877b-61ef55fa69d6" />
 
 #### 🎥 Prima versione Ultra light 🎥 ####
 
