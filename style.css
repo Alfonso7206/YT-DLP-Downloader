@@ -69,9 +69,10 @@ h1 {
 
 /* ===================== THUMBNAIL ===================== */
 .video-item img.thumbnail {
-    width: 250px;
-    height: 160px;
-    object-fit: cover;
+    width: 200px;
+    height: auto;   /* altezza automatica */
+    max-height: 120px; /* optional, per non allungare troppo */
+    object-fit: contain;
     border-radius: 4px;
     margin-right: 15px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
