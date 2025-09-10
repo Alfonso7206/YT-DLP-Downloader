@@ -10,26 +10,24 @@ const urlArea = document.getElementById("urlArea");
 const videoList = document.getElementById("videoList");
 const clearList = document.getElementById("clearList");
 const audioOnlyChk = document.getElementById("audioOnlyChk");
+const convertMkvChk = document.getElementById("convertMkvChk");
 const folderInput = document.getElementById("folderLabel");
 const themeToggle = document.getElementById("themeToggle");
 
 // ===================== INIT =====================
 document.addEventListener("DOMContentLoaded", async () => {
-    // Carica settings
     const settings = await ipcRenderer.invoke("get-settings");
     downloadFolder = settings.downloadFolder;
     const theme = settings.theme || "dark";
 
-    // Aggiorna input con cartella salvata
     if (folderInput) folderInput.value = downloadFolder || "";
-
     document.body.dataset.theme = theme;
     themeToggle.textContent = theme === "dark" ? "🌙" : "☀️";
 
     binPaths = await ipcRenderer.invoke("get-bin-paths");
 });
 
-// ===================== DARK/LIGHT TOGGLE =====================
+// ===================== THEME TOGGLE =====================
 themeToggle.addEventListener("click", () => {
     const newTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
     document.body.dataset.theme = newTheme;
@@ -37,7 +35,7 @@ themeToggle.addEventListener("click", () => {
     ipcRenderer.send("set-theme", newTheme);
 });
 
-// ===================== CARTELLA DOWNLOAD =====================
+// ===================== FOLDER =====================
 document.getElementById("openFolderBtn").addEventListener("click", () => ipcRenderer.invoke("open-folder"));
 
 document.getElementById("setFolderBtn").addEventListener("click", async () => {
@@ -58,10 +56,11 @@ function addVideo(url) {
         title: "Caricamento...",
         thumbnail: "",
         duration: "",
-        format: null,
+        formats: null,
         status: "",
         progress: 0,
-        pid: Date.now()
+        pid: Date.now(),
+        format: null
     };
     videos.push(video);
     renderVideos();
@@ -78,17 +77,9 @@ function renderVideos() {
 
         const thumb = video.thumbnail ? `<img src="${video.thumbnail}" class="thumbnail">` : `<div class="spinner"></div>`;
 
-        // Genera le opzioni della select con id, estensione e dimensione
-        const formatOptions = video.formats ? video.formats.map(f => {
-            let sizeStr = '';
-            if (f.filesize || f.filesize_approx) {
-                let bytes = f.filesize || f.filesize_approx;
-                if (bytes < 1024*1024) sizeStr = (bytes/1024).toFixed(1) + ' KB';
-                else if (bytes < 1024*1024*1024) sizeStr = (bytes/(1024*1024)).toFixed(1) + ' MB';
-                else sizeStr = (bytes/(1024*1024*1024)).toFixed(2) + ' GB';
-            }
-            return `<option value="${f.format_id}">${f.format_id} (${f.ext})${sizeStr ? ' - ' + sizeStr : ''}</option>`;
-        }).join('') : '';
+        const formatOptions = video.formats ? video.formats.map(f =>
+            `<option value="${f.format_id}">${f.format_id} (${f.ext})${f.sizeStr ? ' - ' + f.sizeStr : ''}</option>`
+        ).join('') : '';
 
         div.innerHTML = `
             ${thumb}
@@ -113,7 +104,6 @@ function renderVideos() {
     });
     addDragAndDropHandlers();
 }
-
 
 window.setFormat = (index, formatId) => { if (videos[index]) videos[index].format = formatId; };
 
@@ -152,7 +142,7 @@ urlArea.addEventListener("drop", e => {
     } else alert("Trascina un file di testo (.txt)");
 });
 
-// ===================== FETCH DETTAGLI VIDEO =====================
+// ===================== FETCH VIDEO DETAILS =====================
 function fetchVideoDetails(video) {
     if (!binPaths) return;
     const proc = spawn(binPaths.ytDlp, ["-j", "--no-playlist", video.url]);
@@ -168,6 +158,18 @@ function fetchVideoDetails(video) {
             video.thumbnail = info.thumbnail || "";
             video.duration = info.duration_string || "";
             video.formats = info.formats || [];
+
+            // Calcola dimensione leggibile
+            video.formats = video.formats.map(f => {
+                let sizeStr = '';
+                if (f.filesize || f.filesize_approx) {
+                    let bytes = f.filesize || f.filesize_approx;
+                    if (bytes < 1024*1024) sizeStr = (bytes/1024).toFixed(1) + ' KB';
+                    else if (bytes < 1024*1024*1024) sizeStr = (bytes/(1024*1024)).toFixed(1) + ' MB';
+                    else sizeStr = (bytes/(1024*1024*1024)).toFixed(2) + ' GB';
+                }
+                return { ...f, sizeStr };
+            });
         } catch (e) { console.error("Errore parsing video:", e); }
         renderVideos();
     });
@@ -178,10 +180,14 @@ window.downloadVideo = (index) => {
     const video = videos[index];
     if (!video) return;
 
+    const audioOnly = audioOnlyChk.checked;
+    const convertMkv = convertMkvChk.checked;
+
     ipcRenderer.invoke("start-download", {
         ...video,
         outputDir: downloadFolder || null,
-        audioOnly: audioOnlyChk.checked
+        audioOnly: audioOnly,
+        recode: convertMkv ? "mkv" : null
     });
 
     const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
@@ -199,13 +205,16 @@ window.downloadVideo = (index) => {
         stopBtn = document.createElement("button");
         stopBtn.textContent = "Stop";
         stopBtn.className = "stop-btn";
-        stopBtn.onclick = () => { ipcRenderer.send("stop-download", video.url); stopBtn.disabled = true; };
+        stopBtn.onclick = () => {
+            ipcRenderer.send("stop-download", video.url);
+            stopBtn.disabled = true;
+        };
         videoDiv.appendChild(stopBtn);
     }
     stopBtn.disabled = false;
 };
 
-// ===================== PROGRESS DOWNLOAD =====================
+// ===================== DOWNLOAD PROGRESS =====================
 ipcRenderer.on("download-progress", (event, { url, data }) => {
     const video = videos.find(v => v.url === url);
     if (!video) return;
@@ -244,29 +253,34 @@ ipcRenderer.on("download-complete", (event, { url, code }) => {
     progressBar.style.backgroundColor = code === 0 ? "#4CAF50" : "#F44336";
     statusText.textContent = code === 0 ? "✅ Completato" : "💀 Errore";
     detailsText.textContent = code === 0 ? "⬇️   Completato" : "⬇️   Errore";
-
     if (stopBtn) stopBtn.remove();
 });
 
-// ===================== DRAG & DROP VIDEO REORDER =====================
+// ===================== STOP DOWNLOAD =====================
+ipcRenderer.on("download-stopped", (event, { url }) => {
+    const video = videos.find(v => v.url === url);
+    if (!video) return;
+
+    const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
+    if (!videoDiv) return;
+
+    const progressBar = videoDiv.querySelector(".progress-bar");
+    const statusText = videoDiv.querySelector(".status");
+    const detailsText = videoDiv.querySelector(".download-details");
+    const stopBtn = videoDiv.querySelector(".stop-btn");
+
+    progressBar.style.backgroundColor = "#F44336";
+    statusText.textContent = "⛔ Interrotto";
+    detailsText.textContent = "⬇️   Interrotto";
+    if (stopBtn) stopBtn.disabled = true;
+});
+
+// ===================== DRAG & DROP REORDER =====================
 let dragSrcEl = null;
-
-function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.outerHTML);
-    this.classList.add('dragging');
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    return false;
-}
-
+function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.outerHTML); this.classList.add('dragging'); }
+function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
 function handleDragEnter() { this.classList.add('over'); }
 function handleDragLeave() { this.classList.remove('over'); }
-
 function handleDrop(e) {
     e.stopPropagation();
     if (dragSrcEl !== this) {
@@ -274,17 +288,9 @@ function handleDrop(e) {
         const mouseY = e.clientY;
         const targetRect = this.getBoundingClientRect();
         const insertAfter = mouseY > targetRect.top + targetRect.height / 2;
-
-        // Rimuovi elemento trascinato
         parent.removeChild(dragSrcEl);
-
-        if (insertAfter) {
-            this.insertAdjacentElement('afterend', dragSrcEl);
-        } else {
-            this.insertAdjacentElement('beforebegin', dragSrcEl);
-        }
-
-        // Aggiorna array videos
+        if (insertAfter) this.insertAdjacentElement('afterend', dragSrcEl);
+        else this.insertAdjacentElement('beforebegin', dragSrcEl);
         const newOrder = [];
         parent.querySelectorAll('.video-item').forEach(el => {
             const pid = parseInt(el.dataset.pid);
@@ -292,19 +298,12 @@ function handleDrop(e) {
             if (vid) newOrder.push(vid);
         });
         videos = newOrder;
-
-        addDragAndDropHandlers(); // Riattacca eventi
+        addDragAndDropHandlers();
     }
     this.classList.remove('over');
     return false;
 }
-
-
-function handleDragEnd() {
-    this.classList.remove('dragging');
-    document.querySelectorAll('.video-item').forEach(item => item.classList.remove('over'));
-}
-
+function handleDragEnd() { this.classList.remove('dragging'); document.querySelectorAll('.video-item').forEach(item => item.classList.remove('over')); }
 function addDragAndDropHandlers() {
     document.querySelectorAll('.video-item').forEach(item => {
         item.addEventListener('dragstart', handleDragStart, false);
