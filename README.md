@@ -16,6 +16,8 @@ below the old graphics
 ##### Puoi trasportare file .txt con i link dentro direttamente sulla textarea #####
 ##### Permette la scelta di tutti i formati di [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 ##### Scarica MP3 #####
+##### Scarica Playlist Video e Audio #####
+##### Converte in MKV #####
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 
 
