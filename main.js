@@ -45,8 +45,8 @@ function sendToRenderer(channel, data) {
 // ===================== FINESTRA PRINCIPALE =====================
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 985,
-        height: 700,
+        width: 900,
+        height: 900,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -149,17 +149,25 @@ function startDownload(video) {
 
     const args = ["-o", `${outputDir}/%(title)s.%(ext)s`];
 
-    // Solo audio
-    if (video.audioOnly) {
-        args.push("-x", "--audio-format", "mp3");
-    } else if (video.format) {
-        args.push("-f", video.format);
-    }
+// Solo audio
+if (video.audioOnly) {
+    args.push("-x", "--audio-format", "mp3");
+} else if (video.format) {
+    args.push("-f", video.format);
+}
+
+// Playlist
+if (video.playlist) {
+    args.push("--yes-playlist");
+} else {
+    args.push("--no-playlist");
+}
 
     // Ricodifica in MKV se richiesto
     if (video.recode) {
         args.push("--recode-video", video.recode); // esempio: "mkv"
     }
+
 
     args.push(video.url);
 
@@ -174,6 +182,7 @@ function startDownload(video) {
         sendToRenderer("download-complete", { url: video.url, code });
     });
 }
+
 
 // ===================== APP READY =====================
 app.whenReady().then(createWindow);

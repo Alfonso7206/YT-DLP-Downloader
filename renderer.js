@@ -11,8 +11,10 @@ const videoList = document.getElementById("videoList");
 const clearList = document.getElementById("clearList");
 const audioOnlyChk = document.getElementById("audioOnlyChk");
 const convertMkvChk = document.getElementById("convertMkvChk");
+const playlistChk = document.getElementById("playlistChk"); // NUOVA CHECKBOX
 const folderInput = document.getElementById("folderLabel");
 const themeToggle = document.getElementById("themeToggle");
+
 // Gestione disabilitazione incrociata
 audioOnlyChk.addEventListener("change", () => {
     if (audioOnlyChk.checked) {
@@ -29,6 +31,17 @@ convertMkvChk.addEventListener("change", () => {
         audioOnlyChk.disabled = true;
     } else {
         audioOnlyChk.disabled = false;
+    }
+});
+// Gestione disabilitazione incrociata per Playlist
+playlistChk.addEventListener("change", () => {
+    if (playlistChk.checked) {
+        convertMkvChk.checked = false;
+        audioOnlyChk.disabled = true;
+        convertMkvChk.disabled = true;
+    } else {
+        audioOnlyChk.disabled = false;
+        convertMkvChk.disabled = false;
     }
 });
 // ===================== INIT =====================
@@ -120,12 +133,9 @@ function renderVideos() {
         videoList.appendChild(div);
     });
 
-    // Mostra o nascondi il pulsante clearList in base alla lista
     clearList.style.display = videos.length > 0 ? "inline-block" : "none";
-
     addDragAndDropHandlers();
 }
-
 
 window.setFormat = (index, formatId) => { if (videos[index]) videos[index].format = formatId; };
 
@@ -167,7 +177,11 @@ urlArea.addEventListener("drop", e => {
 // ===================== FETCH VIDEO DETAILS =====================
 function fetchVideoDetails(video) {
     if (!binPaths) return;
-    const proc = spawn(binPaths.ytDlp, ["-j", "--no-playlist", video.url]);
+    const args = ["-j"];
+    if (!playlistChk.checked) args.push("--no-playlist"); // gestione playlist
+    args.push(video.url);
+
+    const proc = spawn(binPaths.ytDlp, args);
     let dataStr = "";
 
     proc.stdout.on("data", chunk => dataStr += chunk.toString());
@@ -181,7 +195,6 @@ function fetchVideoDetails(video) {
             video.duration = info.duration_string || "";
             video.formats = info.formats || [];
 
-            // Calcola dimensione leggibile
             video.formats = video.formats.map(f => {
                 let sizeStr = '';
                 if (f.filesize || f.filesize_approx) {
@@ -204,12 +217,14 @@ window.downloadVideo = (index) => {
 
     const audioOnly = audioOnlyChk.checked;
     const convertMkv = convertMkvChk.checked;
+    const playlist = playlistChk.checked; // NUOVO
 
     ipcRenderer.invoke("start-download", {
         ...video,
         outputDir: downloadFolder || null,
         audioOnly: audioOnly,
-        recode: convertMkv ? "mkv" : null
+        recode: convertMkv ? "mkv" : null,
+        playlist: playlist // passaggio a main
     });
 
     const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
@@ -236,7 +251,7 @@ window.downloadVideo = (index) => {
     stopBtn.disabled = false;
 };
 
-// ===================== DOWNLOAD PROGRESS =====================
+// ===================== DOWNLOAD PROGRESS & COMPLETE =====================
 ipcRenderer.on("download-progress", (event, { url, data }) => {
     const video = videos.find(v => v.url === url);
     if (!video) return;
