@@ -13,7 +13,24 @@ const audioOnlyChk = document.getElementById("audioOnlyChk");
 const convertMkvChk = document.getElementById("convertMkvChk");
 const folderInput = document.getElementById("folderLabel");
 const themeToggle = document.getElementById("themeToggle");
+// Gestione disabilitazione incrociata
+audioOnlyChk.addEventListener("change", () => {
+    if (audioOnlyChk.checked) {
+        convertMkvChk.checked = false;
+        convertMkvChk.disabled = true;
+    } else {
+        convertMkvChk.disabled = false;
+    }
+});
 
+convertMkvChk.addEventListener("change", () => {
+    if (convertMkvChk.checked) {
+        audioOnlyChk.checked = false;
+        audioOnlyChk.disabled = true;
+    } else {
+        audioOnlyChk.disabled = false;
+    }
+});
 // ===================== INIT =====================
 document.addEventListener("DOMContentLoaded", async () => {
     const settings = await ipcRenderer.invoke("get-settings");
