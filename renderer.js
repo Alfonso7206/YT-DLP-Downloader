@@ -1,57 +1,59 @@
 const { ipcRenderer, clipboard } = require("electron");
-const path = require("path");
 const { spawn } = require("child_process");
 
 let downloadFolder = null;
 let binPaths = null;
 let videos = [];
 
-// --- Elementi DOM
+// --- DOM elements
 const urlArea = document.getElementById("urlArea");
 const videoList = document.getElementById("videoList");
 const clearList = document.getElementById("clearList");
 const audioOnlyChk = document.getElementById("audioOnlyChk");
+const folderInput = document.getElementById("folderLabel");
+const themeToggle = document.getElementById("themeToggle");
 
-//--- Bottone Dark/Light
-// let themeToggle = document.createElement("button");
-// themeToggle.id = "themeToggle";
-// themeToggle.textContent = "🌙 Dark/Light";
-// document.body.appendChild(themeToggle);
+// ===================== INIT =====================
+document.addEventListener("DOMContentLoaded", async () => {
+    // Carica settings
+    const settings = await ipcRenderer.invoke("get-settings");
+    downloadFolder = settings.downloadFolder;
+    const theme = settings.theme || "dark";
 
-//--- Inizializza tema
-// if (!localStorage.getItem("theme")) localStorage.setItem("theme", "dark");
-// document.body.dataset.theme = localStorage.getItem("theme");
+    // Aggiorna input con cartella salvata
+    if (folderInput) folderInput.value = downloadFolder || "";
 
+    document.body.dataset.theme = theme;
+    themeToggle.textContent = theme === "dark" ? "🌙" : "☀️";
 
-// --- Bottoni cartella
-document.getElementById("openFolderBtn").addEventListener("click", () => ipcRenderer.invoke("open-folder"));
-document.getElementById("setFolderBtn").addEventListener("click", async () => {
-    const folder = await ipcRenderer.invoke("set-folder");
-    if (folder) downloadFolder = folder;
+    binPaths = await ipcRenderer.invoke("get-bin-paths");
 });
 
-// --- Ottieni path binari
-(async () => { binPaths = await ipcRenderer.invoke("get-bin-paths"); })();
+// ===================== DARK/LIGHT TOGGLE =====================
+themeToggle.addEventListener("click", () => {
+    const newTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
+    document.body.dataset.theme = newTheme;
+    themeToggle.textContent = newTheme === "dark" ? "🌙" : "☀️";
+    ipcRenderer.send("set-theme", newTheme);
+});
 
-// --- CSS dinamico
-const style = document.createElement("style");
-style.innerHTML = `
-#urlArea:empty::before { content:"Incolla URL qui"; color:#888; pointer-events:none; }
-.download-details { font-family: monospace; white-space: pre; }
-.thumbnail { width:120px; height:90px; cursor:pointer; }
-.video-item { display:flex; margin-bottom:5px; border:1px solid #ccc; padding:5px; }
-.video-info { margin-left:10px; flex:1; }
-.progress-bar-container { width:100%; height:6px; background:#eee; margin:4px 0; }
-.progress-bar { height:6px; background:#2196F3; width:0%; transition: width 0.2s; }
-.stop-btn { margin-left:5px; }
-#themeToggle { position:fixed; top:10px; right:10px; padding:6px 12px; border-radius:6px; cursor:pointer; z-index:1000; }
-`;
-document.head.appendChild(style);
+// ===================== CARTELLA DOWNLOAD =====================
+document.getElementById("openFolderBtn").addEventListener("click", () => ipcRenderer.invoke("open-folder"));
 
-// --- Aggiungi video
+document.getElementById("setFolderBtn").addEventListener("click", async () => {
+    const folder = await ipcRenderer.invoke("set-folder");
+    if (folder) {
+        ipcRenderer.invoke("save-download-folder", folder).then(savedFolder => {
+            downloadFolder = savedFolder;
+            if (folderInput) folderInput.value = savedFolder;
+        });
+    }
+});
+
+// ===================== LISTA VIDEO =====================
 function addVideo(url) {
     if (!url || videos.find(v => v.url === url)) return;
-    const placeholder = {
+    const video = {
         url,
         title: "Caricamento...",
         thumbnail: "",
@@ -61,20 +63,33 @@ function addVideo(url) {
         progress: 0,
         pid: Date.now()
     };
-    videos.push(placeholder);
+    videos.push(video);
     renderVideos();
-    fetchVideoDetails(placeholder);
+    fetchVideoDetails(video);
 }
 
-// --- Render lista video
 function renderVideos() {
     videoList.innerHTML = "";
     videos.forEach((video, index) => {
         const div = document.createElement("div");
         div.className = "video-item";
         div.dataset.pid = video.pid;
+        div.draggable = true;
 
         const thumb = video.thumbnail ? `<img src="${video.thumbnail}" class="thumbnail">` : `<div class="spinner"></div>`;
+
+        // Genera le opzioni della select con id, estensione e dimensione
+        const formatOptions = video.formats ? video.formats.map(f => {
+            let sizeStr = '';
+            if (f.filesize || f.filesize_approx) {
+                let bytes = f.filesize || f.filesize_approx;
+                if (bytes < 1024*1024) sizeStr = (bytes/1024).toFixed(1) + ' KB';
+                else if (bytes < 1024*1024*1024) sizeStr = (bytes/(1024*1024)).toFixed(1) + ' MB';
+                else sizeStr = (bytes/(1024*1024*1024)).toFixed(2) + ' GB';
+            }
+            return `<option value="${f.format_id}">${f.format_id} (${f.ext})${sizeStr ? ' - ' + sizeStr : ''}</option>`;
+        }).join('') : '';
+
         div.innerHTML = `
             ${thumb}
             <div class="video-info">
@@ -83,7 +98,7 @@ function renderVideos() {
                 <label>Qualità:
                     <select onchange="setFormat(${index}, this.value)">
                         <option value="">Migliore disponibile</option>
-                        ${video.formats ? video.formats.map(f => `<option value="${f.format_id}">${f.format}</option>`).join('') : ''}
+                        ${formatOptions}
                     </select>
                 </label>
                 <div class="progress-bar-container">
@@ -96,30 +111,48 @@ function renderVideos() {
         `;
         videoList.appendChild(div);
     });
+    addDragAndDropHandlers();
 }
 
-// --- Set formato
+
 window.setFormat = (index, formatId) => { if (videos[index]) videos[index].format = formatId; };
 
-// --- Rimuovi video
 window.removeVideo = (index) => {
-    if (index < 0 || index >= videos.length) return;
     const video = videos[index];
     if (clipboard.readText().trim() === video.url) clipboard.writeText("");
     videos.splice(index, 1);
     renderVideos();
 };
 
-// --- Clipboard monitor (solo lista, nessun download automatico)
+clearList.addEventListener("click", () => { videos = []; renderVideos(); });
+
+// ===================== CLIPBOARD MONITOR =====================
 setInterval(() => {
     const text = clipboard.readText().trim();
     if (text.startsWith("http") && !videos.find(v => v.url === text)) addVideo(text);
 }, 1000);
 
-// --- Cancella lista
-clearList.addEventListener("click", () => { videos = []; renderVideos(); });
+// ===================== DRAG & DROP FILE =====================
+urlArea.addEventListener("dragover", e => { e.preventDefault(); urlArea.style.border = "2px dashed #007ACC"; });
+urlArea.addEventListener("dragleave", e => { e.preventDefault(); urlArea.style.border = ""; });
+urlArea.addEventListener("drop", e => {
+    e.preventDefault();
+    urlArea.style.border = "";
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
 
-// --- Fetch video details
+    if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target.result.trim();
+            const urls = content.split(/\r?\n/).map(u => u.trim()).filter(u => u);
+            urls.forEach(url => addVideo(url));
+        };
+        reader.readAsText(file);
+    } else alert("Trascina un file di testo (.txt)");
+});
+
+// ===================== FETCH DETTAGLI VIDEO =====================
 function fetchVideoDetails(video) {
     if (!binPaths) return;
     const proc = spawn(binPaths.ytDlp, ["-j", "--no-playlist", video.url]);
@@ -140,7 +173,7 @@ function fetchVideoDetails(video) {
     });
 }
 
-// --- Download video
+// ===================== DOWNLOAD =====================
 window.downloadVideo = (index) => {
     const video = videos[index];
     if (!video) return;
@@ -172,10 +205,11 @@ window.downloadVideo = (index) => {
     stopBtn.disabled = false;
 };
 
-// --- Aggiornamento progress
+// ===================== PROGRESS DOWNLOAD =====================
 ipcRenderer.on("download-progress", (event, { url, data }) => {
     const video = videos.find(v => v.url === url);
     if (!video) return;
+
     const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
     if (!videoDiv) return;
 
@@ -194,7 +228,6 @@ ipcRenderer.on("download-progress", (event, { url, data }) => {
     progressBar.style.width = percent + "%";
 });
 
-// --- Download completato
 ipcRenderer.on("download-complete", (event, { url, code }) => {
     const video = videos.find(v => v.url === url);
     if (!video) return;
@@ -215,41 +248,70 @@ ipcRenderer.on("download-complete", (event, { url, code }) => {
     if (stopBtn) stopBtn.remove();
 });
 
-// --- Drag & Drop file .txt
-urlArea.addEventListener("dragover", e => { e.preventDefault(); urlArea.style.border = "2px dashed #007ACC"; });
-urlArea.addEventListener("dragleave", e => { e.preventDefault(); urlArea.style.border = ""; });
-urlArea.addEventListener("drop", e => {
+// ===================== DRAG & DROP VIDEO REORDER =====================
+let dragSrcEl = null;
+
+function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+    this.classList.add('dragging');
+}
+
+function handleDragOver(e) {
     e.preventDefault();
-    urlArea.style.border = "";
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
 
-    if (file.type === "text/plain") {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const content = event.target.result.trim();
-            const urls = content.split(/\r?\n/).map(u => u.trim()).filter(u => u);
-            urls.forEach(url => addVideo(url));
-        };
-        reader.readAsText(file);
-    } else alert("Trascina un file di testo (.txt)");
-});
+function handleDragEnter() { this.classList.add('over'); }
+function handleDragLeave() { this.classList.remove('over'); }
 
-// --- DARK/LIGHT TOGGLE ---
-document.addEventListener("DOMContentLoaded", () => {
-    const themeToggle = document.getElementById("themeToggle");
-    if (!themeToggle) return;
+function handleDrop(e) {
+    e.stopPropagation();
+    if (dragSrcEl !== this) {
+        const parent = this.parentNode;
+        const mouseY = e.clientY;
+        const targetRect = this.getBoundingClientRect();
+        const insertAfter = mouseY > targetRect.top + targetRect.height / 2;
 
-    // Imposta tema iniziale da localStorage o default dark
-    let currentTheme = localStorage.getItem("theme") || "dark";
-    document.body.setAttribute("data-theme", currentTheme);
-    themeToggle.textContent = currentTheme === "dark" ? "🌙" : "☀️";
+        // Rimuovi elemento trascinato
+        parent.removeChild(dragSrcEl);
 
-    // Toggle tema
-    themeToggle.addEventListener("click", () => {
-        currentTheme = currentTheme === "dark" ? "light" : "dark";
-        document.body.setAttribute("data-theme", currentTheme);
-        themeToggle.textContent = currentTheme === "dark" ? "🌙" : "☀️";
-        localStorage.setItem("theme", currentTheme);
+        if (insertAfter) {
+            this.insertAdjacentElement('afterend', dragSrcEl);
+        } else {
+            this.insertAdjacentElement('beforebegin', dragSrcEl);
+        }
+
+        // Aggiorna array videos
+        const newOrder = [];
+        parent.querySelectorAll('.video-item').forEach(el => {
+            const pid = parseInt(el.dataset.pid);
+            const vid = videos.find(v => v.pid === pid);
+            if (vid) newOrder.push(vid);
+        });
+        videos = newOrder;
+
+        addDragAndDropHandlers(); // Riattacca eventi
+    }
+    this.classList.remove('over');
+    return false;
+}
+
+
+function handleDragEnd() {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.video-item').forEach(item => item.classList.remove('over'));
+}
+
+function addDragAndDropHandlers() {
+    document.querySelectorAll('.video-item').forEach(item => {
+        item.addEventListener('dragstart', handleDragStart, false);
+        item.addEventListener('dragenter', handleDragEnter, false);
+        item.addEventListener('dragover', handleDragOver, false);
+        item.addEventListener('dragleave', handleDragLeave, false);
+        item.addEventListener('drop', handleDrop, false);
+        item.addEventListener('dragend', handleDragEnd, false);
     });
-});
+}
