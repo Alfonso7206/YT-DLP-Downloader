@@ -139,10 +139,12 @@ button:hover {
 
 /* ===================== TEXTAREA ===================== */
 textarea#urlArea {
-    width: 95%;
-    max-width: 900px;
+    width: 100%;             /* prende tutta la larghezza */
+    max-width: none;         /* nessun limite rigido */
+    box-sizing: border-box;  /* padding incluso nel calcolo */
     min-height: 70px;
-    padding: 10px 12px;
+    padding: 10px 12px;      /* padding interno del testo */
+    margin: 0 0 20px 0;      /* solo spazio sotto */
     border-radius: 6px;
     border: 1px solid var(--video-border);
     background-color: var(--select-bg);
@@ -152,8 +154,12 @@ textarea#urlArea {
     resize: vertical;
     outline: none;
     display: block;
-    margin: 0 auto 20px auto;
     transition: border 0.2s, background 0.2s;
+}
+
+/* aggiungiamo margine ai lati del contenitore */
+form {
+    padding: 0 15px; /* piccolo padding sinistra e destra */
 }
 
 textarea#urlArea:focus {
