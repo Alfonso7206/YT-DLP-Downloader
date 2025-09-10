@@ -13,7 +13,9 @@ body[data-theme="dark"] {
     --progress-fill: #2196F3;
     --spinner-color: #2196F3;
 }
-
+#clearList {
+    display: none;
+}
 body[data-theme="light"] {
     --bg-color: #fff;
     --text-color: #000;

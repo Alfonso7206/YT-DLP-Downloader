@@ -119,8 +119,13 @@ function renderVideos() {
         `;
         videoList.appendChild(div);
     });
+
+    // Mostra o nascondi il pulsante clearList in base alla lista
+    clearList.style.display = videos.length > 0 ? "inline-block" : "none";
+
     addDragAndDropHandlers();
 }
+
 
 window.setFormat = (index, formatId) => { if (videos[index]) videos[index].format = formatId; };
 
