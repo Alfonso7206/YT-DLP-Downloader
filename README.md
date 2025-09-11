@@ -1,5 +1,6 @@
 <img width="1186" height="1016" alt="electron_zpU8Jsfthr" src="https://github.com/user-attachments/assets/6dc26aa1-91ef-416d-a286-4300bc9d6e3c" />
-<img width="1184" height="877" alt="zdoWvpH28P" src="https://github.com/user-attachments/assets/c95a1bdb-3a9d-493e-b725-99ad91615b7c" />
+<img width="1183" height="873" alt="zdoWvpH28P" src="https://github.com/user-attachments/assets/0d9c2dd7-0653-4f5d-a35e-3f0a408f7d3a" />
+
 
 #### 🎥 Prima versione Ultra light 🎥 ####
 
