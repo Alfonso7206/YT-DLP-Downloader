@@ -15,6 +15,7 @@
 ##### Converte in MKV #####
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 ##### Inglese e Italiano #####
+##### Cambio Tema (Dark/Light) #####
 ##### Ricarica lista dei link #####
 ##### Trasporto dell'url nella textarea #####
 
