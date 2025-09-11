@@ -1,4 +1,5 @@
 <img width="1186" height="1016" alt="electron_zpU8Jsfthr" src="https://github.com/user-attachments/assets/6dc26aa1-91ef-416d-a286-4300bc9d6e3c" />
+<img width="1184" height="877" alt="zdoWvpH28P" src="https://github.com/user-attachments/assets/c95a1bdb-3a9d-493e-b725-99ad91615b7c" />
 
 #### 🎥 Prima versione Ultra light 🎥 ####
 
@@ -14,6 +15,7 @@
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 ##### Inglese e Italiano #####
 ##### Ricarica lista dei link #####
+##### Trasporto dell'url nella textarea #####
 
 ###### It's so simple my grandfather could modify it 😂 ######
 
