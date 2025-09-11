@@ -382,26 +382,47 @@ setInterval(() => {
 
 // ---------- DRAG & DROP FILE INTO TEXTAREA ----------
 if (urlArea) {
-    urlArea.addEventListener("dragover", e => { e.preventDefault(); urlArea.style.border = "2px dashed #007ACC"; });
-    urlArea.addEventListener("dragleave", e => { e.preventDefault(); urlArea.style.border = ""; });
+    urlArea.addEventListener("dragover", e => {
+        e.preventDefault();
+        urlArea.style.border = "2px dashed #007ACC";
+    });
+
+    urlArea.addEventListener("dragleave", e => {
+        e.preventDefault();
+        urlArea.style.border = "";
+    });
+
     urlArea.addEventListener("drop", e => {
         e.preventDefault();
         urlArea.style.border = "";
-        const file = e.dataTransfer.files[0];
-        if (!file) return;
-        if (file.type === "text/plain" || file.name.endsWith(".txt")) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const content = event.target.result.trim();
-                const urls = content.split(/\r?\n/).map(u => u.trim()).filter(u => u);
-                urls.forEach(url => addVideo(url));
-            };
-            reader.readAsText(file);
-        } else {
-            alert("Trascina un file di testo (.txt) con i link, uno per riga.");
+
+        // 1️⃣ Gestione file .txt
+        if (e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.type === "text/plain" || file.name.endsWith(".txt")) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result.trim();
+                    const urls = content.split(/\r?\n/).map(u => u.trim()).filter(u => u);
+                    urls.forEach(url => addVideo(url));
+                };
+                reader.readAsText(file);
+            } else {
+                alert("Trascina un file di testo (.txt) con i link, uno per riga.");
+            }
+            return;
+        }
+
+        // 2️⃣ Gestione URL trascinati dal browser (link/favicons)
+        const textData = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+        if (textData) {
+            const urls = textData.split(/\r?\n/).map(u => u.trim()).filter(u => u);
+            urls.forEach(url => addVideo(url));
         }
     });
 }
+
+
 
 // ---------- FETCH VIDEO DETAILS (yt-dlp -j) ----------
 function fetchVideoDetails(video) {
