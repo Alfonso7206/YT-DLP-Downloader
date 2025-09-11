@@ -1,7 +1,7 @@
 <img width="1186" height="1016" alt="electron_zpU8Jsfthr" src="https://github.com/user-attachments/assets/6dc26aa1-91ef-416d-a286-4300bc9d6e3c" />
 <img width="1183" height="873" alt="zdoWvpH28P" src="https://github.com/user-attachments/assets/0d9c2dd7-0653-4f5d-a35e-3f0a408f7d3a" />
 
-
+## Interamente creato con ChatGPT ##
 #### 🎥 Prima versione Ultra light 🎥 ####
 
 ##### Richiede node.js - nella cartella del programma ci deve essere la cartella node_modules #####
