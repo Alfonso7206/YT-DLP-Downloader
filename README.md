@@ -1,4 +1,4 @@
-<img width="886" height="990" alt="electron_i6iwEL8iOT" src="https://github.com/user-attachments/assets/d910f6ee-0729-4bc2-877b-61ef55fa69d6" />
+<img width="1186" height="1016" alt="electron_zpU8Jsfthr" src="https://github.com/user-attachments/assets/6dc26aa1-91ef-416d-a286-4300bc9d6e3c" />
 
 #### 🎥 Prima versione Ultra light 🎥 ####
 
@@ -13,6 +13,7 @@
 ##### Converte in MKV #####
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
 ##### Inglese e Italiano #####
+##### Ricarica lista dei link #####
 
 ###### It's so simple my grandfather could modify it 😂 ######
 
