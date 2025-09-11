@@ -30,6 +30,12 @@ body[data-theme="light"] {
     --progress-fill: #2196F3;
     --spinner-color: #2196F3;
 }
+.video-item button {
+    padding: 6px 12px;
+    margin-left: 5px;
+    background-color: var(--button-bg);
+    color: var(--text-color);
+}
 
 /* ===================== BODY & FONT ===================== */
 body {
@@ -56,45 +62,24 @@ h1 {
     display: flex;
     align-items: center;
     background-color: var(--video-bg);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 6px;
+    padding: 0; /* rimuove padding sopra e sotto e ai lati */
     border: 1px solid var(--video-border) !important;
     box-shadow: inset 0 0 0 1px var(--video-border);
     transition: background 0.2s, border 0.2s;
+    overflow: hidden; /* così la miniatura rispetta i bordi arrotondati */
 }
 
-.video-item:hover {
-    background-color: var(--video-hover);
-}
-
-/* ===================== THUMBNAIL ===================== */
 .video-item img.thumbnail {
-    width: 200px;
-    height: auto;   /* altezza automatica */
-    max-height: 120px; /* optional, per non allungare troppo */
-    object-fit: contain;
-    border-radius: 4px;
-    margin-right: 15px;
+    width: 255px;
+    height: 100%;  /* occupa tutta l'altezza del container */
+    object-fit: cover; /* riempie il container senza distorsione */
+	 /*image-rendering: pixelated;*/
+    border-radius: 0; /* se vuoi angoli a filo */
+    margin: 0; /* rimuove tutti i margini */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
-}
-
-/* ===================== HOVER MINIATURE ===================== */
-.video-item img.thumbnail {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-}
-
-/* DARK THEME: glow bianco soft */
-body[data-theme="dark"] .video-item img.thumbnail:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 40px 3px rgba(255, 255, 255, 0.2); /* bianco soft */
-}
-
-/* LIGHT THEME: glow nero soft */
-body[data-theme="light"] .video-item img.thumbnail:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 40px 3px rgba(0, 0, 0, 0.2); /* nero soft */
+	margin-right: 15px;
 }
 
 /* ===================== VIDEO INFO ===================== */
@@ -123,7 +108,6 @@ body[data-theme="light"] .video-item img.thumbnail:hover {
     font-size: 13px;
     color: #b0b0b0;
 }
-
 /* ===================== BUTTONS ===================== */
 button {
     padding: 5px 10px;
@@ -159,7 +143,21 @@ textarea#urlArea {
     display: block;
     transition: border 0.2s, background 0.2s;
 }
+.video-buttons {
+    display: flex;
+    align-items: center;
+}
+.stop-btn {
+     margin-right: 10px; /* opzionale, piccolo spazio dal bordo */
+}
 
+.download-btn {
+    margin-left: auto; /* spinge Download a destra */
+}
+
+.remove-btn {
+    margin-right: 5px; /* opzionale, piccolo spazio dal bordo */
+}
 /* aggiungiamo margine ai lati del contenitore */
 form {
     padding: 0 15px; /* piccolo padding sinistra e destra */
@@ -170,23 +168,6 @@ textarea#urlArea:focus {
     background-color: var(--video-hover);
 }
 
-/* ===================== PROGRESS BAR ===================== */
-.progress-bar-container {
-    width: 100%;
-    background-color: var(--progress-bg);
-    border-radius: 4px;
-    overflow: hidden;
-    height: 10px;
-    margin-top: 5px;
-}
-
-.progress-bar {
-    height: 100%;
-    background-color: var(--progress-fill);
-    width: 0%;
-    transition: width 0.2s ease;
-    border-radius: 4px;
-}
 
 /* ===================== POPUP THUMBNAIL ===================== */
 #thumbnail-popup {
@@ -291,3 +272,285 @@ label {
     margin-right: 12px;
     color: inherit;
 }
+
+
+/* ===================== DRAG & DROP ELEGANTE ===================== */
+
+/* Transizione base per tutte le miniature */
+.video-item {
+    transition: transform 0.3s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    cursor: grab;
+}
+
+/* Durante il drag */
+.video-item.dragging {
+    opacity: 0.6;                     /* leggermente trasparente */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4); /* ombra intensa */
+    transform: scale(1.05);           /* ingrandimento leggero */
+    cursor: grabbing;
+}
+
+/* Area target evidenziata durante il drag */
+.video-item.over {
+    border: 2px dashed #2196F3;       /* bordo blu */
+    background-color: rgba(33,150,243,0.05); /* leggero sfondo blu */
+}
+
+/* Transizione fluida per l’intero contenitore della lista */
+#videoList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.2s ease; /* le miniature si spostano dolcemente */
+}
+
+
+/* Miniature immagini */
+.video-item img.thumbnail {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+/* ================= DARK/LIGHT THEME ================= */
+
+/* Overlay popup */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Contenitore popup */
+.popup {
+
+  color: var(--text-color, #121212);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(255,255,255,0.4);
+}
+/* Pulsanti */
+.popup-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.popup-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+ 
+	box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+	
+}
+body[data-theme="light"] .popup-box h3,
+body[data-theme="dark"] .popup-box h3 {
+    color: #ffffff;
+}
+/* H3 nel popup */
+.popup-box h3 {
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    color: #ffffff !important;
+}
+
+//
+/* ===================== EFFETTO SUI BOTTONI LINGUA ===================== */
+.lang-btn {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lang-btn:hover {
+    transform: scale(1.1); /* leggero ingrandimento */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3); /* ombra delicata */
+}
+
+.lang-btn:active {
+    transform: scale(0.95); /* effetto pressione */
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.lang-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+/* ===================== EFFETTO them toggle disabled ===================== */
+#themeToggle {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#themeToggle:hover:enabled {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+#themeToggle:active:enabled {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+#themeToggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+/* ===================== PROGRESS BAR NEL VIDEO ===================== */
+.video-item .progress-container {
+    width: 100%;               /* prende tutta la larghezza del video-item */
+    height: 6px;               /* visibile ma compatta */
+    margin-top: 5px;           /* spazio sopra */
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--progress-bg); 
+    border: 1px solid rgba(0,0,0,0.2); /* bordo leggero per contrasto */
+    box-sizing: border-box;
+}
+
+.video-item .progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--progress-fill);
+    transition: width 0.2s ease;
+    display: block;
+}
+
+/* ===================== VARIABILI TEMI ===================== */
+body[data-theme="dark"] {
+    --video-bg: #1a1a1a;
+    --progress-bg: #2b2b2b;   /* leggermente più chiaro del video-bg */
+    --progress-fill: #2196F3;
+}
+
+body[data-theme="light"] {
+    --video-bg: #f5f5f5;
+    --progress-bg: #ddd;      /* più chiaro per contrasto */
+    --progress-fill: #2196F3;
+}
+.video-item {
+    position: relative; /* necessario per il badge */
+}
+
+/*.video-item[data-quality]:not([data-quality=""])::after {
+    content: attr(data-quality);
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #2196F3;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    z-index: 10;
+}
+
+.video-item::after {
+    content: "TEST";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: red;
+    color: #fff;
+    padding: 2px 4px;
+}
+.video-info label[for="formatSelect"] {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: #FF5722;
+}
+*/
+.quality-label {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: #FF5722;
+}
+
+/* ======= QUALITA' COMBO ======= */
+.quality-select {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 4px 6px;
+    border-radius: 10px; 
+    border: 1px solid rgba(100,100,100,0.1); 
+    background-color: var(--select-bg);
+    color: var(--text-color);
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+body[data-theme="dark"] .quality-select {
+    background-color: #1e1e1e;
+    color: #ffffff; /* prima era blue, ora bianco */
+    border-color: rgba(255,255,255,0.08);
+}
+
+body[data-theme="light"] .quality-select {
+    background-color: #fff;
+    color: #000000; /* prima era rosso, ora blue esistente */
+    border-color: rgba(0,0,0,0.08);
+}
+
+/* Optional: focus leggero ma elegante */
+.quality-select:focus {
+    outline: none;
+    border-color: rgba(33,150,243,0.3);
+    box-shadow: 0 0 5px rgba(33,150,243,0.15);
+}
+#urlContainer {
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+}
+
+#urlArea {
+    width: 100%;
+    padding: 10px 40px 10px 12px; /* spazio a destra per il bottone */
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid var(--video-border);
+    background-color: var(--select-bg);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+}
+
+#addInlineBtn {
+    position: absolute;
+    top: 50%;
+    right: 10px;          /* distanza dal bordo destro */
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent; /* trasparente */
+    color: var(--text-color); /* stesso colore del testo */
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 28px;
+    text-align: center;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+#addInlineBtn:hover {
+    color: var(--progress-fill); /* cambia colore al hover */
+    transform: translateY(-50%) scale(1.2);
+}
+

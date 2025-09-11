@@ -1,51 +1,76 @@
+// main.js - completo aggiornato
 const { app, BrowserWindow, ipcMain, shell, Menu, nativeTheme, dialog } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-// ===================== SETTINGS =====================
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 
-// Carica settings o crea default
-let settings = {};
-try {
-    if (fs.existsSync(SETTINGS_PATH)) {
-        settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
-    }
-} catch (e) {
-    console.error("Errore leggendo settings.json:", e);
-}
-
-// Imposta default se manca
-settings.downloadFolder = settings.downloadFolder || null;
-settings.theme = settings.theme || "dark";
-
-// Salva subito per creare il file
-try {
-    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
-    console.log("Settings inizializzato in:", SETTINGS_PATH);
-} catch (e) {
-    console.error("Errore salvando settings.json:", e);
-}
-
-// ===================== VARIABILI GLOBALI =====================
 let mainWindow;
 let activeDownloads = {};
-let downloadFolder = settings.downloadFolder;
-let theme = settings.theme;
-nativeTheme.themeSource = theme;
+let settings = {
+    links: [],
+    options: {
+        audioOnly: false,
+        convertMkv: false,
+        playlist: false
+    },
+    downloadFolder: null,
+    theme: "dark",
+    language: "it" // default language
+};
 
-// ===================== FUNZIONE SICURA INVIO RENDERER =====================
+// ---------- settings load/save ----------
+function loadSettings() {
+    try {
+        if (fs.existsSync(SETTINGS_PATH)) {
+            const raw = fs.readFileSync(SETTINGS_PATH, "utf-8");
+            const s = JSON.parse(raw);
+            // Merge defaults
+            settings = {
+                links: s.links || [],
+                options: s.options || { audioOnly: false, convertMkv: false, playlist: false },
+                downloadFolder: s.downloadFolder || null,
+                theme: s.theme || "dark",
+                language: s.language || "it"
+            };
+        } else {
+            // write defaults immediately
+            saveSettings();
+        }
+    } catch (e) {
+        console.error("Errore caricando settings:", e);
+    }
+}
+
+function saveSettings() {
+    try {
+        fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
+    } catch (e) {
+        console.error("Errore salvando settings:", e);
+    }
+}
+
+// initialize settings on startup
+loadSettings();
+nativeTheme.themeSource = settings.theme;
+
+// ---------- helper: send to renderer ----------
 function sendToRenderer(channel, data) {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(channel, data);
     }
 }
 
-// ===================== FINESTRA PRINCIPALE =====================
+// ---------- bin dir helpers ----------
+function getBinDir() {
+    return app.isPackaged ? path.join(process.resourcesPath, "Bin") : path.join(__dirname, "Bin");
+}
+
+// ---------- create window ----------
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 900,
+        width: 1200,
         height: 900,
         webPreferences: {
             nodeIntegration: true,
@@ -56,6 +81,7 @@ function createWindow() {
 
     mainWindow.loadFile("index.html");
 
+    // remove menu
     Menu.setApplicationMenu(null);
     mainWindow.setMenuBarVisibility(false);
 
@@ -66,131 +92,148 @@ function createWindow() {
     });
 }
 
-// ===================== BINARIES =====================
-function getBinDir() {
-    return app.isPackaged ? path.join(process.resourcesPath, "Bin") : path.join(__dirname, "Bin");
-}
+app.whenReady().then(createWindow);
 
-// ===================== SAVE SETTINGS =====================
-function saveSettings() {
-    try {
-        fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
-    } catch (e) {
-        console.error("Errore salvando settings.json:", e);
+// ---------- IPC handlers ----------
+
+// Return settings to renderer
+ipcMain.handle("get-settings", () => {
+    return {
+        links: settings.links,
+        options: settings.options,
+        downloadFolder: settings.downloadFolder,
+        theme: settings.theme,
+        language: settings.language
+    };
+});
+
+// Save settings (full object)
+ipcMain.on("save-settings", (event, newSettings) => {
+    if (typeof newSettings === "object") {
+        if (Array.isArray(newSettings.links)) settings.links = newSettings.links;
+        if (newSettings.options && typeof newSettings.options === "object") settings.options = newSettings.options;
+        if (newSettings.downloadFolder !== undefined) settings.downloadFolder = newSettings.downloadFolder;
+        if (newSettings.theme) {
+            settings.theme = newSettings.theme;
+            nativeTheme.themeSource = settings.theme;
+        }
+        if (newSettings.language) {
+            settings.language = newSettings.language;
+        }
     }
-}
+    saveSettings();
+});
 
-// ===================== IPC HANDLERS =====================
+// Open folder
 ipcMain.handle("open-folder", async () => {
-    const folder = downloadFolder || app.getPath("downloads");
+    const folder = settings.downloadFolder || app.getPath("downloads");
     const result = await shell.openPath(folder);
     if (result) console.error("Errore aprendo cartella:", result);
     return folder;
 });
 
+// Ask user to choose folder
 ipcMain.handle("set-folder", async () => {
     const result = await dialog.showOpenDialog({ properties: ["openDirectory"] });
     if (!result.canceled && result.filePaths.length > 0) {
-        downloadFolder = result.filePaths[0];
-        settings.downloadFolder = downloadFolder;
+        settings.downloadFolder = result.filePaths[0];
         saveSettings();
-        return downloadFolder;
+        return settings.downloadFolder;
     }
     return null;
 });
 
-ipcMain.handle("get-bin-paths", () => {
-    const binDir = getBinDir();
-    return {
-        ytDlp: path.join(binDir, "yt-dlp.exe"),
-        ffmpeg: path.join(binDir, "ffmpeg.exe"),
-        ffprobe: path.join(binDir, "ffprobe.exe")
-    };
-});
-ipcMain.handle("get-settings", () => {
-    return {
-        downloadFolder: downloadFolder,
-        theme: theme
-    };
-});
-ipcMain.handle("start-download", (event, video) => startDownload(video));
-
-ipcMain.on("stop-download", (event, url) => {
-    const proc = activeDownloads[url];
-    if (proc) {
-        const pid = proc.pid;
-
-        // Su Windows forza la chiusura del processo e dei figli
-        spawn("taskkill", ["/PID", pid.toString(), "/T", "/F"]);
-
-        delete activeDownloads[url];
-
-        // Invia evento al renderer
-        sendToRenderer("download-stopped", { url });
-    }
-});
 ipcMain.handle("save-download-folder", (event, folder) => {
     settings.downloadFolder = folder;
     saveSettings();
-    return settings.downloadFolder; // restituisce l'output salvato
+    return settings.downloadFolder;
 });
+
+// return bin paths (yt-dlp, ffmpeg, ffprobe)
+ipcMain.handle("get-bin-paths", () => {
+    const binDir = getBinDir();
+    return {
+        ytDlp: path.join(binDir, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp"),
+        ffmpeg: path.join(binDir, process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg"),
+        ffprobe: path.join(binDir, process.platform === "win32" ? "ffprobe.exe" : "ffprobe")
+    };
+});
+
+// Theme setter
 ipcMain.on("set-theme", (event, newTheme) => {
-    theme = newTheme;
-    nativeTheme.themeSource = theme;
     settings.theme = newTheme;
+    nativeTheme.themeSource = newTheme;
     saveSettings();
 });
 
-// ===================== DOWNLOAD =====================
+// ---------- Download management ----------
+ipcMain.handle("start-download", (event, video) => {
+    startDownload(video);
+});
+
+ipcMain.on("stop-download", (event, urlOrPid) => {
+    const procEntry = activeDownloads[urlOrPid] || Object.values(activeDownloads).find(p => p.meta && (p.meta.url === urlOrPid || p.meta.pid == urlOrPid));
+    const proc = procEntry && procEntry.proc ? procEntry.proc : procEntry;
+    if (proc && proc.pid) {
+        try {
+            if (process.platform === "win32") {
+                spawn("taskkill", ["/PID", proc.pid.toString(), "/T", "/F"]);
+            } else {
+                proc.kill("SIGTERM");
+            }
+        } catch (e) {
+            console.error("Errore killing proc:", e);
+        }
+    }
+});
+
+// startDownload function
 function startDownload(video) {
-    const outputDir = video.outputDir || downloadFolder || app.getPath("downloads");
+    const outputDir = video.outputDir || settings.downloadFolder || app.getPath("downloads");
     const binDir = getBinDir();
-    const ytDlpPath = path.join(binDir, "yt-dlp.exe");
+    const ytDlpPath = path.join(binDir, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 
-    const args = ["-o", `${outputDir}/%(title)s.%(ext)s`];
+    const args = ["-o", path.join(outputDir, "%(title)s.%(ext)s")];
 
-// Solo audio
-if (video.audioOnly) {
-    args.push("-x", "--audio-format", "mp3");
-} else if (video.format) {
-    args.push("-f", video.format);
-}
-
-// Playlist
-if (video.playlist) {
-    args.push("--yes-playlist");
-} else {
-    args.push("--no-playlist");
-}
-
-    // Ricodifica in MKV se richiesto
-    if (video.recode) {
-        args.push("--recode-video", video.recode); // esempio: "mkv"
+    if (video.audioOnly) {
+        args.push("-x", "--audio-format", "mp3");
+    } else if (video.format) {
+        args.push("-f", video.format);
     }
 
+    if (video.recode) {
+        args.push("--recode-video", video.recode);
+    }
+
+    if (video.playlist) args.push("--yes-playlist");
+    else args.push("--no-playlist");
 
     args.push(video.url);
 
-    const proc = spawn(ytDlpPath, args);
-    activeDownloads[video.url] = proc;
+    try {
+        const proc = spawn(ytDlpPath, args, { windowsHide: true });
+        activeDownloads[video.url] = { proc, meta: { url: video.url, pid: video.pid || Date.now() } };
 
-    proc.stdout.on("data", chunk => sendToRenderer("download-progress", { url: video.url, data: chunk.toString() }));
-    proc.stderr.on("data", chunk => sendToRenderer("download-progress", { url: video.url, data: chunk.toString() }));
+        proc.stdout.on("data", chunk => sendToRenderer("download-progress", { url: video.url, data: chunk.toString() }));
+        proc.stderr.on("data", chunk => sendToRenderer("download-progress", { url: video.url, data: chunk.toString() }));
 
-    proc.on("close", (code) => {
-        delete activeDownloads[video.url];
-        sendToRenderer("download-complete", { url: video.url, code });
-    });
+        proc.on("close", (code) => {
+            delete activeDownloads[video.url];
+            sendToRenderer("download-complete", { url: video.url, code });
+        });
+    } catch (e) {
+        console.error("Errore startDownload:", e);
+        sendToRenderer("download-complete", { url: video.url, code: 1 });
+    }
 }
 
-
-// ===================== APP READY =====================
-app.whenReady().then(createWindow);
-
-// ===================== CHIUSURA =====================
+// Ensure child procs are killed on app quit
 app.on("window-all-closed", () => {
-    Object.values(activeDownloads).forEach(proc => {
-        if (!proc.killed) proc.kill();
+    Object.values(activeDownloads).forEach(entry => {
+        try {
+            const p = entry.proc || entry;
+            if (p && !p.killed) p.kill();
+        } catch (e) { }
     });
     if (process.platform !== "darwin") app.quit();
 });

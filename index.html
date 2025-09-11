@@ -2,47 +2,66 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>YT-DLP Downloader</title>
+    <title>YT-DLP Downloader v1.1.0 by AL</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body data-theme="dark">
 
     <h1>🎬 YT-DLP Downloader</h1>
-
     <!-- Bottoni cartella -->
     <div style="text-align:center; margin-bottom:15px;">
-        <button id="openFolderBtn">📁 Apri Cartella</button>
-        <button id="setFolderBtn">📁 Seleziona Cartella</button>
+        <button id="openFolderBtn"></button>
+        <button id="setFolderBtn"></button>
 		<input type="text" id="folderLabel" readonly style="width:300px;" />
 		</div>
 
 
-    <!-- Textarea per incollare URL -->
-	<div class="center">
+<div id="urlContainer">
+    <textarea id="urlArea" placeholder="link..."></textarea>
+    <button id="addInlineBtn">+</button>
+</div>
 
-    <textarea id="urlArea" placeholder="👀 Incolla URL qui"></textarea><br>
-	</div>
 <label>
-    <input type="checkbox" id="audioOnlyChk">🎵 Solo Audio (MP3)
+    <input type="checkbox" id="audioOnlyChk">🎵 MP3
 </label>
 <label>
-    <input type="checkbox" id="convertMkvChk">🔄 Converti in MKV
+    <input type="checkbox" id="convertMkvChk">🔄 MKV
 </label>
 <label>
-    <input type="checkbox" id="playlistChk">📃 Scarica Playlist
+    <input type="checkbox" id="playlistChk">📃 Playlist
 </label>
     </div><br>
+	<!-- POPUP CONFERMA -->
+<div id="popupOverlay" class="popup-overlay">
+  <div class="popup">
+   <h3 id="reloadListTitle"></h3>
+    <div class="popup-buttons">
+      <button id="popupYes">Sì</button>
+      <button id="popupNo">No</button>
+    </div>
+  </div>
+</div>
     <!-- Lista video -->
-    🎞️<div id="videoList"></div>
+    <div id="videoList"></div>
 
     <!-- Cancella lista -->
     <div style="text-align:center; margin-top:10px;">
-        <button id="clearList">❌ Cancella Lista</button>
+        <button id="clearList"></button>
     </div>
 
-    <!-- Bottone Dark/Light (posizionato in alto a destra) -->
-<button id="themeToggle" style="position:fixed; top:10px; right:10px; z-index:1000; font-size:13px;">🌙</button>
 
+<button id="themeToggle" style="position:fixed; top:10px; right:10px; z-index:1000; font-size:13px;">🌙</button>
+<button id="btn-it" class="lang-btn" 
+        onclick="setLanguage('it')" 
+        style="position:fixed; top:10px; left:10px; z-index:1000; font-size:13px;">
+    🇮🇹 IT
+</button>
+
+<button id="btn-en" class="lang-btn" 
+        onclick="setLanguage('en')" 
+        style="position:fixed; top:10px; left:60px; z-index:1000; font-size:13px;">
+    🇬🇧 EN
+</button>
     <script src="renderer.js"></script>
 </body>
 </html>
