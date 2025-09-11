@@ -12,7 +12,7 @@
 ##### Scarica Playlist Video e Audio #####
 ##### Converte in MKV #####
 ##### Scarica Video da tutti i link supportati da [yt-dlp](https://github.com/yt-dlp/yt-dlp) #####
-
+##### Inglese e Italiano #####
 
 ###### It's so simple my grandfather could modify it 😂 ######
 
