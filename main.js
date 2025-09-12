@@ -1,4 +1,4 @@
-// main.js - completo aggiornato
+
 const { app, BrowserWindow, ipcMain, shell, Menu, nativeTheme, dialog } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
@@ -17,29 +17,27 @@ let settings = {
     },
     downloadFolder: null,
     theme: "dark",
-    language: "it" // default language
 };
 
-// ---------- settings load/save ----------
+
 function loadSettings() {
     try {
         if (fs.existsSync(SETTINGS_PATH)) {
             const raw = fs.readFileSync(SETTINGS_PATH, "utf-8");
             const s = JSON.parse(raw);
-            // Merge defaults
+
             settings = {
                 links: s.links || [],
                 options: s.options || { audioOnly: false, convertMkv: false, playlist: false },
                 downloadFolder: s.downloadFolder || null,
                 theme: s.theme || "dark",
-                language: s.language || "it"
             };
         } else {
-            // write defaults immediately
+
             saveSettings();
         }
     } catch (e) {
-        console.error("Errore caricando settings:", e);
+        console.error("Error loading settings:", e);
     }
 }
 
@@ -47,27 +45,27 @@ function saveSettings() {
     try {
         fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
     } catch (e) {
-        console.error("Errore salvando settings:", e);
+        console.error("Error saving settings:", e);
     }
 }
 
-// initialize settings on startup
+
 loadSettings();
 nativeTheme.themeSource = settings.theme;
 
-// ---------- helper: send to renderer ----------
+
 function sendToRenderer(channel, data) {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(channel, data);
     }
 }
 
-// ---------- bin dir helpers ----------
+
 function getBinDir() {
     return app.isPackaged ? path.join(process.resourcesPath, "Bin") : path.join(__dirname, "Bin");
 }
 
-// ---------- create window ----------
+
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -81,7 +79,7 @@ function createWindow() {
 
     mainWindow.loadFile("index.html");
 
-    // remove menu
+
     Menu.setApplicationMenu(null);
     mainWindow.setMenuBarVisibility(false);
 
@@ -94,20 +92,17 @@ function createWindow() {
 
 app.whenReady().then(createWindow);
 
-// ---------- IPC handlers ----------
 
-// Return settings to renderer
 ipcMain.handle("get-settings", () => {
     return {
         links: settings.links,
         options: settings.options,
         downloadFolder: settings.downloadFolder,
         theme: settings.theme,
-        language: settings.language
     };
 });
 
-// Save settings (full object)
+
 ipcMain.on("save-settings", (event, newSettings) => {
     if (typeof newSettings === "object") {
         if (Array.isArray(newSettings.links)) settings.links = newSettings.links;
@@ -117,22 +112,19 @@ ipcMain.on("save-settings", (event, newSettings) => {
             settings.theme = newSettings.theme;
             nativeTheme.themeSource = settings.theme;
         }
-        if (newSettings.language) {
-            settings.language = newSettings.language;
-        }
     }
     saveSettings();
 });
 
-// Open folder
+
 ipcMain.handle("open-folder", async () => {
     const folder = settings.downloadFolder || app.getPath("downloads");
     const result = await shell.openPath(folder);
-    if (result) console.error("Errore aprendo cartella:", result);
+    if (result) console.error("Error opening folder:", result);
     return folder;
 });
 
-// Ask user to choose folder
+
 ipcMain.handle("set-folder", async () => {
     const result = await dialog.showOpenDialog({ properties: ["openDirectory"] });
     if (!result.canceled && result.filePaths.length > 0) {
@@ -149,7 +141,7 @@ ipcMain.handle("save-download-folder", (event, folder) => {
     return settings.downloadFolder;
 });
 
-// return bin paths (yt-dlp, ffmpeg, ffprobe)
+
 ipcMain.handle("get-bin-paths", () => {
     const binDir = getBinDir();
     return {
@@ -159,14 +151,14 @@ ipcMain.handle("get-bin-paths", () => {
     };
 });
 
-// Theme setter
+
 ipcMain.on("set-theme", (event, newTheme) => {
     settings.theme = newTheme;
     nativeTheme.themeSource = newTheme;
     saveSettings();
 });
 
-// ---------- Download management ----------
+
 ipcMain.handle("start-download", (event, video) => {
     startDownload(video);
 });
@@ -186,8 +178,10 @@ ipcMain.on("stop-download", (event, urlOrPid) => {
         }
     }
 });
+const { exec } = require("child_process");
 
-// startDownload function
+
+
 function startDownload(video) {
     const outputDir = video.outputDir || settings.downloadFolder || app.getPath("downloads");
     const binDir = getBinDir();
@@ -227,7 +221,7 @@ function startDownload(video) {
     }
 }
 
-// Ensure child procs are killed on app quit
+
 app.on("window-all-closed", () => {
     Object.values(activeDownloads).forEach(entry => {
         try {

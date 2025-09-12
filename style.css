@@ -554,3 +554,86 @@ body[data-theme="light"] .quality-select {
     transform: translateY(-50%) scale(1.2);
 }
 
+.video-buttons button {
+    margin: 4px 2px 0 0;
+    padding: 5px 10px;
+    font-size: 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.download-btn { background-color: var(--download-bg); color: var(--download-text); }
+.remove-btn   { background-color: var(--remove-bg); color: var(--remove-text); }
+.stop-btn     { background-color: var(--stop-bg); color: var(--stop-text); }
+
+body[data-theme="dark"] {
+    --download-bg: #2196F3; --download-text: #fff;
+    --remove-bg: #f44336;   --remove-text: #fff;
+    --stop-bg: #9C27B0;     --stop-text: #fff;
+}
+
+body[data-theme="light"] {
+    --download-bg: #1976D2; --download-text: #fff;
+    --remove-bg: #E53935;   --remove-text: #fff;
+    --stop-bg: #8E24AA;     --stop-text: #fff;
+}
+
+/* Pulsanti disabilitati */
+.video-buttons button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.thumbnail {
+    cursor: pointer;  /* mostra la mano al passaggio */
+    object-fit: contain; /* mantiene proporzioni senza tagliare */
+}
+/* ===================== POPUP OVERLAY ===================== */
+.popup-overlay, #clearPopupOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.popup, #clearPopupOverlay > div {
+    color: var(--text-color);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.4);
+    background-color: var(--video-bg);
+}
+.popup-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+.popup-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.popup-buttons button:hover { transform: scale(1.05); }
+
+/* ===================== SPECIFIC CLEAR POPUP ===================== */
+#clearPopupOverlay > div button#clearPopupYes,
+#clearPopupOverlay > div button#clearPopupNo {
+    background-color: var(--button-bg);
+    color: var(--text-color);
+}
+
+#clearPopupOverlay > div button#clearPopupYes:hover,
+#clearPopupOverlay > div button#clearPopupNo:hover {
+    background-color: var(--button-hover);
+}
