@@ -1,0 +1,50 @@
+{
+  "name": "ytdlp-downloader",
+  "version": "1.0.0",
+  "description": "YT-DLP Downloader",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir --win"
+  },
+  "build": {
+    "appId": "com.ytdlpdownloader.ytdl",
+    "productName": "AL YT-DLP Downloader",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "renderer.js",
+	  "m3u8Resolver.js",
+      "style.css",
+      "package.json",
+      "!*.bat",
+      "!*.7z",
+      "!README.md"
+    ],
+    "extraFiles": [
+      {
+        "from": "Bin/",
+        "to": "bin"
+      }
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "win": {
+      "target": "dir",
+      "icon": "assets/icon.ico"
+    }
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "electron": "^38.1.0",
+    "electron-builder": "^24.6.0"
+  }
+}

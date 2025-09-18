@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YT-DLP Downloader v1.0.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+<h1>🎬 YT-DLP Downloader 🎬</h1>
+<fieldset id="field1" title="Options Folder">  
+  <button id="openFolderBtn">Open Folder</button>
+  <button id="setFolderBtn">Save to</button>
+  <input type="text" id="folderLabel" readonly style="width:300px;" />
+</fieldset>
+<fieldset id="field2" title="Options Video-Audio">
+  <label>
+    <input type="checkbox" id="audioOnlyChk"> 🎵 Download MP3
+  </label>
+  <label>
+    <input type="checkbox" id="convertMkvChk"> 🔄 Convert to MKV
+  </label>
+  <label>
+    <input type="checkbox" id="playlistChk"> 📃 Download Playlist
+  </label>
+</fieldset>
+<br>
+
+<div id="groupBox">
+    <button id="downloadAllBtn">Download All ⬇️</button>
+    <button id="resolveM3u8Btn">Get Real M3U8 🎬</button>
+	<button id="updateYtDlpBtn">Update yt-dlp ⬆️</button> 
+   <div id="updateLog" style="margin-top:5px; font-size:0.9em; color:lime; max-height:150px; overflow:auto;"></div> 
+<div id="logArea" style="margin-top:5px; font-size:0.9em; color:lime;"></div>
+</div>
+<div id="urlContainer" style="position: relative; width: 100%;">
+    <textarea id="urlArea" placeholder="links..." style="width: 100%; padding-right: 90px;"></textarea>
+
+<button id="addInlineBtn" title="Add link" style="
+    position: absolute;
+    top: 5px;
+    right: 15px; /* leggermente più a destra */
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 28px;
+    color: dodgerblue;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+">✔️</button>
+
+<button id="resetTextareaBtn" title="Clear link" style="
+    position: absolute;
+    top: 38px;
+    right: 15px; /* leggermente più a destra */
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 28px;
+    color: red;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+">❌</button>
+
+<button id="pasteBtn" title="Paste link" style="
+    position: absolute;
+    top: 71px;
+    right: 15px; /* leggermente più a destra */
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 28px;
+    color: #0b84ff;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+">📋</button>
+
+<div id="popupOverlay" class="popup-overlay">
+  <div class="popup">
+   <h3 id="reloadListTitle">You want to load the links?</h3>
+    <div class="popup-buttons">
+      <button id="popupYes">Yes</button>
+      <button id="popupNo">No</button>
+    </div>
+  </div>
+</div>
+
+<div id="clearPopupOverlay">
+  <div class="popup">
+    <h3>Do you really want to delete the entire list?</h3>
+    <div class="popup-buttons">
+      <button id="clearPopupYes">Yes</button>
+      <button id="clearPopupNo">No</button>
+    </div>
+  </div>
+</div>
+
+<button id="clearList">❌ Clear List</button>
+
+<div id="videoList"></div>
+	
+<button id="themeToggle" style="position:fixed; top:10px; right:10px; z-index:1000; font-size:13px;">🌙</button>
+<script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+/* ===================== DARK/LIGHT THEME ===================== */
+body[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --video-bg: #1a1a1a;
+    --video-border: #333;
+    --video-hover: #2a2a2a;
+    --select-bg: #1c1c1c;
+    --select-border: #444;
+    --button-bg: #2a2a2a;
+    --button-hover: #3a3a3a;
+    --progress-bg: #2a2a2a;
+    --progress-fill: #82f211;
+    --spinner-color: #82f211;
+}
+#clearList {
+    display: none;
+}
+body[data-theme="light"] {
+    --bg-color: #fff;
+    --text-color: #000;
+    --video-bg: #f5f5f5;
+    --video-border: #ccc;
+    --video-hover: #e0e0e0;
+    --select-bg: #fff;
+    --select-border: #aaa;
+    --button-bg: #eee;
+    --button-hover: #ddd;
+    --progress-bg: #ddd;
+    --progress-fill: #2196F3;
+    --spinner-color: #2196F3;
+}
+.video-item button {
+    padding: 6px 12px;
+    margin-left: 5px;
+    background-color: var(--button-bg);
+    color: var(--text-color);
+}
+
+/* ===================== BODY & FONT ===================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+/* ===================== VIDEO LIST ===================== */
+#videoList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ===================== SINGOLO VIDEO ITEM ===================== */
+.video-item {
+    display: flex;
+    align-items: center;
+    background-color: var(--video-bg);
+    border-radius: 6px;
+    padding: 0; /* rimuove padding sopra e sotto e ai lati */
+    border: 1px solid var(--video-border) !important;
+    box-shadow: inset 0 0 0 1px var(--video-border);
+    transition: background 0.2s, border 0.2s;
+    overflow: hidden; /* così la miniatura rispetta i bordi arrotondati */
+}
+
+.video-item img.thumbnail {
+    width: 255px;
+    height: 100%;  /* occupa tutta l'altezza del container */
+    object-fit: cover; /* riempie il container senza distorsione */
+	 /*image-rendering: pixelated;*/
+    border-radius: 0; /* se vuoi angoli a filo */
+    margin: 0; /* rimuove tutti i margini */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+	margin-right: 15px;
+}
+
+/* ===================== VIDEO INFO ===================== */
+.video-info {
+    flex-grow: 1;
+}
+
+.video-info strong {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.video-info select {
+    margin-top: 5px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--select-border);
+    background-color: var(--select-bg);
+    color: var(--text-color);
+}
+
+.video-info .status {
+    margin-top: 3px;
+    font-size: 13px;
+    color: #b0b0b0;
+}
+/* ===================== BUTTONS ===================== */
+button {
+    padding: 5px 10px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: var(--button-hover);
+}
+
+/* ===================== TEXTAREA ===================== */
+textarea#urlArea {
+    width: 100%;             /* prende tutta la larghezza */
+    max-width: none;         /* nessun limite rigido */
+    box-sizing: border-box;  /* padding incluso nel calcolo */
+    min-height: 105px;
+    padding: 10px 12px;      /* padding interno del testo */
+    margin: 0 0 20px 0;      /* solo spazio sotto */
+    border-radius: 6px;
+    border: 1px solid var(--video-border);
+    background-color: var(--select-bg);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    display: block;
+    transition: border 0.2s, background 0.2s;
+}
+.video-buttons {
+    display: flex;
+    align-items: center;
+}
+.stop-btn {
+     margin-right: 10px; /* opzionale, piccolo spazio dal bordo */
+}
+
+.download-btn {
+    margin-left: auto; /* spinge Download a destra */
+}
+
+.remove-btn {
+    margin-right: 5px; /* opzionale, piccolo spazio dal bordo */
+}
+/* aggiungiamo margine ai lati del contenitore */
+form {
+    padding: 0 15px; /* piccolo padding sinistra e destra */
+}
+
+textarea#urlArea:focus {
+    border-color: var(--video-border);
+    background-color: var(--video-hover);
+}
+
+
+/* ===================== POPUP THUMBNAIL ===================== */
+#thumbnail-popup {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    width: 320px;
+    border: 1px solid var(--select-border);
+    border-radius: 4px;
+    display: none;
+    z-index: 1000;
+}
+
+/* ===================== SPINNER ===================== */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid var(--spinner-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* ===================== FOLDER LABEL ===================== */
+#folderLabel {
+    width: 300px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid;
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    font-family: inherit;
+    font-size: 14px;
+}
+
+/* DARK THEME */
+body[data-theme="dark"] #folderLabel {
+    --input-bg: #1a1a1a;
+    --input-text: #e0e0e0;
+    border-color: #333;
+}
+
+/* LIGHT THEME */
+body[data-theme="light"] #folderLabel {
+    --input-bg: #fff;
+    --input-text: #121212;
+    border-color: #ccc;
+}
+/* ===================== BASE CHECKBOX ===================== */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin-right: 6px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #1e1e1e;
+}
+
+/* ===================== DARK THEME ===================== */
+body[data-theme="dark"] input[type="checkbox"] {
+    background-color: #1e1e1e; /* sfondo scuro */
+    border: 1px solid #555;     /* bordo scuro */
+}
+
+body[data-theme="dark"] input[type="checkbox"]:checked {
+    accent-color: #2196F3;
+}
+
+body[data-theme="dark"] input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ===================== LIGHT THEME ===================== */
+body[data-theme="light"] input[type="checkbox"] {
+    background-color: #fff;
+    border: 1px solid #aaa;
+}
+
+body[data-theme="light"] input[type="checkbox"]:checked {
+    accent-color: #2196F3;
+}
+
+body[data-theme="light"] input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ===================== LABEL ===================== */
+label {
+    font-weight: normal;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    color: inherit;
+}
+
+
+/* ===================== DRAG & DROP ELEGANTE ===================== */
+
+/* Transizione base per tutte le miniature */
+.video-item {
+    transition: transform 0.3s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    cursor: grab;
+}
+
+/* Durante il drag */
+.video-item.dragging {
+    opacity: 0.6;                     /* leggermente trasparente */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4); /* ombra intensa */
+    transform: scale(1.05);           /* ingrandimento leggero */
+    cursor: grabbing;
+}
+
+/* Area target evidenziata durante il drag */
+.video-item.over {
+    border: 2px dashed #2196F3;       /* bordo blu */
+    background-color: rgba(33,150,243,0.05); /* leggero sfondo blu */
+}
+
+/* Transizione fluida per l’intero contenitore della lista */
+#videoList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.2s ease; /* le miniature si spostano dolcemente */
+}
+
+
+/* Miniature immagini */
+.video-item img.thumbnail {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+/* ================= DARK/LIGHT THEME ================= */
+
+/* Overlay popup */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Contenitore popup */
+.popup {
+
+  color: var(--text-color, #121212);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(255,255,255,0.4);
+}
+/* Pulsanti */
+.popup-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.popup-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+ 
+	box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+	
+}
+body[data-theme="light"] .popup-box h3,
+body[data-theme="dark"] .popup-box h3 {
+    color: #ffffff;
+}
+/* H3 nel popup */
+.popup-box h3 {
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    color: #ffffff !important;
+}
+
+//
+/* ===================== EFFETTO SUI BOTTONI LINGUA ===================== */
+.lang-btn {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lang-btn:hover {
+    transform: scale(1.1); /* leggero ingrandimento */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3); /* ombra delicata */
+}
+
+.lang-btn:active {
+    transform: scale(0.95); /* effetto pressione */
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.lang-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+/* ===================== EFFETTO them toggle disabled ===================== */
+#themeToggle {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#themeToggle:hover:enabled {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+#themeToggle:active:enabled {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+#themeToggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+/* ===================== PROGRESS BAR NEL VIDEO ===================== */
+.video-item .progress-container {
+    width: 100%;               /* prende tutta la larghezza del video-item */
+    height: 6px;               /* visibile ma compatta */
+    margin-top: 5px;           /* spazio sopra */
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--progress-bg); 
+    border: 1px solid rgba(0,0,0,0.2); /* bordo leggero per contrasto */
+    box-sizing: border-box;
+}
+
+.video-item .progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--progress-fill);
+    transition: width 0.2s ease;
+    display: block;
+}
+
+/* ===================== VARIABILI TEMI ===================== */
+body[data-theme="dark"] {
+    --video-bg: #1a1a1a;
+    --progress-bg: #2b2b2b;   /* leggermente più chiaro del video-bg */
+    --progress-fill: #2196F3;
+}
+
+body[data-theme="light"] {
+    --video-bg: #f5f5f5;
+    --progress-bg: #ddd;      /* più chiaro per contrasto */
+    --progress-fill: #2196F3;
+}
+.video-item {
+    position: relative; /* necessario per il badge */
+}
+
+.quality-label {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: #FF5722;
+}
+
+/* ======= QUALITA' COMBO ======= */
+.quality-select {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 4px 6px;
+    border-radius: 10px; 
+    border: 1px solid rgba(100,100,100,0.1); 
+    background-color: var(--select-bg);
+    color: var(--text-color);
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+body[data-theme="dark"] .quality-select {
+    background-color: #1e1e1e;
+    color: #ffffff; /* prima era blue, ora bianco */
+    border-color: rgba(255,255,255,0.08);
+}
+
+body[data-theme="light"] .quality-select {
+    background-color: #fff;
+    color: #000000; /* prima era rosso, ora blue esistente */
+    border-color: rgba(0,0,0,0.08);
+}
+
+/* Optional: focus leggero ma elegante */
+.quality-select:focus {
+    outline: none;
+    border-color: rgba(33,150,243,0.3);
+    box-shadow: 0 0 5px rgba(33,150,243,0.15);
+}
+#urlContainer {
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+}
+
+#urlArea {
+    width: 100%;
+    padding: 10px 40px 10px 12px; /* spazio a destra per il bottone */
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid var(--video-border);
+    background-color: var(--select-bg);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+}
+
+
+.video-buttons button {
+    margin: 4px 2px 0 0;
+    padding: 5px 10px;
+    font-size: 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.download-btn { background-color: var(--download-bg); color: var(--download-text); }
+.remove-btn   { background-color: var(--remove-bg); color: var(--remove-text); }
+.stop-btn     { background-color: var(--stop-bg); color: var(--stop-text); }
+
+body[data-theme="dark"] {
+    --download-bg: #2196F3; --download-text: #fff;
+    --remove-bg: #f44336;   --remove-text: #fff;
+    --stop-bg: #9C27B0;     --stop-text: #fff;
+}
+
+body[data-theme="light"] {
+    --download-bg: #1976D2; --download-text: #fff;
+    --remove-bg: #E53935;   --remove-text: #fff;
+    --stop-bg: #8E24AA;     --stop-text: #fff;
+}
+
+/* Pulsanti disabilitati */
+.video-buttons button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.thumbnail {
+    cursor: pointer;  /* mostra la mano al passaggio */
+    object-fit: contain; /* mantiene proporzioni senza tagliare */
+}
+/* ===================== POPUP OVERLAY ===================== */
+.popup-overlay, #clearPopupOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.popup, #clearPopupOverlay > div {
+    color: var(--text-color);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.4);
+    background-color: var(--video-bg);
+}
+.popup-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+.popup-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.popup-buttons button:hover { transform: scale(1.05); }
+
+/* ===================== SPECIFIC CLEAR POPUP ===================== */
+#clearPopupOverlay > div button#clearPopupYes,
+#clearPopupOverlay > div button#clearPopupNo {
+    background-color: var(--button-bg);
+    color: var(--text-color);
+}
+
+#clearPopupOverlay > div button#clearPopupYes:hover,
+#clearPopupOverlay > div button#clearPopupNo:hover {
+    background-color: var(--button-hover);
+}
+.thumb-wrapper {
+    position: relative;
+    width: 100%;
+    display: inline-block;
+}
+
+.thumb-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #2196F3;
+    transition: width 0.2s ease;
+}
+
+/* ---------------- Fieldset ---------------- */
+/* ---------------- Variabili tema ---------------- */
+body[data-theme="dark"] {
+    --bg-field: #141414;
+    --border-field: #333;
+    --shadow-field: rgba(0,0,0,0.6);
+}
+
+body[data-theme="light"] {
+    --bg-field: #f9f9f9;
+    --border-field: #ccc;
+    --shadow-field: rgba(0,0,0,0.2);
+}
+
+/* ---------------- Fields e GroupBox ---------------- */
+#field1, #field2, #groupBox {
+    border: 1px solid var(--border-field);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: var(--bg-field);
+    box-shadow: 0 2px 5px var(--shadow-field);
+    transition: all 0.3s ease;
+}
+
+/* Solo per groupBox: layout interno */
+#groupBox {
+    display: flex;
+	border-radius: 4px;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+/* === Checkbox base (senza tema) === */
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+/* === Tema Dark === */
+body[data-theme="dark"] input[type="checkbox"] {
+    background-color: #1e1e1e;
+    border-color: #555;
+}
+
+body[data-theme="dark"] input[type="checkbox"]:hover {
+    border-color: dodgerblue;
+}
+
+body[data-theme="dark"] input[type="checkbox"]:checked {
+    background-color: dodgerblue;
+    border-color: dodgerblue;
+}
+
+body[data-theme="dark"] input[type="checkbox"]:checked::after {
+    content: "✔";
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: -2px;
+    left: 2px;
+}
+
+/* === Tema Light === */
+body[data-theme="light"] input[type="checkbox"] {
+    background-color: #fff;
+    border-color: #aaa;
+}
+
+body[data-theme="light"] input[type="checkbox"]:hover {
+    border-color: dodgerblue;
+}
+
+body[data-theme="light"] input[type="checkbox"]:checked {
+    background-color: dodgerblue;
+    border-color: dodgerblue;
+}
+
+body[data-theme="light"] input[type="checkbox"]:checked::after {
+    content: "✔";
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: -2px;
+    left: 2px;
+}
+.folder-label {
+  width: 300px;
+  padding: 5px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #ccc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-label .drive {
+  color: dodgerblue;
+  font-weight: bold;
+}
+/* Variabili per tema */
+:root {
+  --progress-color: #2196F3;     /* blu light */
+  --progress-complete: #15f211;  /* verde finale */
+}
+
+body[data-theme="dark"] {
+  --progress-color: #82f211;     /* verde acceso in dark */
+}
+/* Progress bar container */
+.thumb-progress-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--progress-color),
+    var(--progress-color) 10px,
+    rgba(255, 255, 255, 0.15) 10px,
+    rgba(255, 255, 255, 0.15) 20px
+  );
+  background-size: 40px 40px;
+  animation: stripes 1s linear infinite;
+  transition: width 0.2s ease;
+  width: 0%; /* sempre parte da 0 */
+}
+
+
