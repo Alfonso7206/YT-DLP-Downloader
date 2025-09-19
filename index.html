@@ -2,16 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>YT-DLP Downloader v1.0.0</title>
+    <title>YT-DLP Downloader</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body data-theme="dark">
-<h1>🎬 YT-DLP Downloader 🎬</h1>
+<h4>🎬 YT-DLP Downloader 🎬</h4>
 <fieldset id="field1" title="Options Folder">  
   <button id="openFolderBtn">Open Folder</button>
   <button id="setFolderBtn">Save to</button>
   <input type="text" id="folderLabel" readonly style="width:300px;" />
 </fieldset>
+
+<button id="ytDlpHelpBtn">📜 Help yt-dlp</button>
+<div id="ytHelpContainer" style="display: none;">
+    <button id="closeYtHelp" style="
+    border: none;
+    background: none;
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 5px;
+">🔴</button>
+    <pre id="outputHelp" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto; color: lime;"></pre>
+</div>
+<pre id="outputHelp" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></pre>
 <fieldset id="field2" title="Options Video-Audio">
   <label>
     <input type="checkbox" id="audioOnlyChk"> 🎵 Download MP3
@@ -48,12 +62,12 @@
     background: transparent;
     border: none;
     cursor: pointer;
-">✔️</button>
+">➕</button>
 
 <button id="resetTextareaBtn" title="Clear link" style="
     position: absolute;
     top: 38px;
-    right: 15px; /* leggermente più a destra */
+    right: 15px; 
     width: 28px;
     height: 28px;
     padding: 0;
@@ -68,7 +82,7 @@
 <button id="pasteBtn" title="Paste link" style="
     position: absolute;
     top: 71px;
-    right: 15px; /* leggermente più a destra */
+    right: 15px; 
     width: 28px;
     height: 28px;
     padding: 0;
@@ -79,6 +93,8 @@
     border: none;
     cursor: pointer;
 ">📋</button>
+
+
 
 <div id="popupOverlay" class="popup-overlay">
   <div class="popup">

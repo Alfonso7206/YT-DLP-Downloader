@@ -16,6 +16,7 @@ function isValidUrl(string) {
     }
 }
 
+// ------------------ DOM ELEMENTS ------------------
 const urlArea = document.getElementById("urlArea");
 const videoList = document.getElementById("videoList");
 const clearListBtn = document.getElementById("clearList");
@@ -30,7 +31,7 @@ const addInlineBtn = document.getElementById("addInlineBtn");
 const resetTextareaBtn = document.getElementById("resetTextareaBtn");
 const pasteBtn = document.getElementById("pasteBtn");
 
-const { resolveM3U8FromTextarea } = require("./m3u8Resolver"); 
+const { resolveM3U8FromTextarea } = require("./m3u8Resolver"); // percorso corretto
 const resolveM3u8Btn = document.getElementById("resolveM3u8Btn");
 
 if (resolveM3u8Btn && urlArea) {
@@ -45,6 +46,8 @@ if (resolveM3u8Btn && urlArea) {
     });
 }
 
+
+
 pasteBtn.addEventListener("click", () => {
     if (!urlArea) return;
     const text = clipboard.readText().trim();
@@ -53,6 +56,7 @@ pasteBtn.addEventListener("click", () => {
         urlArea.focus();
     }
 });
+
 
 addInlineBtn.addEventListener("click", () => {
     if (!urlArea) return;
@@ -85,7 +89,6 @@ function filterInvalidChars(text) {
 urlArea.addEventListener("input", () => {
     urlArea.value = filterInvalidChars(urlArea.value);
 });
-
 
 function processTextInput(text) {
     return filterInvalidChars(text).split(/\r?\n/).map(u => u.trim()).filter(u => u);
@@ -129,6 +132,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 
+const ytBtn = document.getElementById('ytDlpHelpBtn');
+const outputContainer = document.getElementById('ytHelpContainer');
+const output = document.getElementById('outputHelp');
+const closeBtn = document.getElementById('closeYtHelp');
+
+if (ytBtn && outputContainer && output && closeBtn) {
+    ytBtn.addEventListener('click', async () => {
+        outputContainer.style.display = 'block';
+        output.textContent = "Loading...";
+        closeBtn.style.display = 'none';
+
+        try {
+            const result = await ipcRenderer.invoke('yt-dlp-help');
+            output.textContent = result;
+            
+            // Mostra il bottone dopo 3 secondi            setTimeout(() => {
+                closeBtn.style.display = 'inline-block';
+            }, 3000);
+
+        } catch (err) {
+            output.textContent = `Errore: ${err}`;
+            closeBtn.style.display = 'inline-block'; 
+        }
+    });
+
+    closeBtn.addEventListener('click', () => {
+        outputContainer.style.display = 'none';
+    });
+}
+//
 function showPopup() {
     return new Promise(resolve => {
         const overlay = document.getElementById("popupOverlay");
@@ -171,7 +204,7 @@ setFolderBtn.addEventListener("click", async () => {
         ipcRenderer.invoke("save-download-folder", folder).then(savedFolder => {
             downloadFolder = savedFolder;
             if (folderInput) {
-                folderInput.value = savedFolder; 
+                folderInput.value = savedFolder;  
                 setFolderPath(savedFolder);       
             }
             saveSettingsToMain();
@@ -222,15 +255,15 @@ const groupBox = document.getElementById("groupBox");
 function updateGroupBoxVisibility() {
     if (!groupBox) return;
     if (videos.length > 0) {
-        groupBox.style.display = "flex";  
+        groupBox.style.display = "flex";      
         requestAnimationFrame(() => {
-            groupBox.style.opacity = 1;        
+            groupBox.style.opacity = 1;          // Fade-in
         });
     } else {
-        groupBox.style.opacity = 0;        
+        groupBox.style.opacity = 0;             // Fade-out
         setTimeout(() => {
             if(videos.length === 0) groupBox.style.display = "none";
-        }, 300); 
+        }, 300); // tempo fade-out
     }
 }
 function renderVideos() {
@@ -275,7 +308,7 @@ function renderVideos() {
             <div class="video-info">
                 <strong>${escapeHtml(video.title)}</strong>
                 <div class="status">${video.status || ""}</div>
-                <label>🎞
+                <label>
                     <select class="quality-select" onchange="setFormat(${index}, this.value)">
                         <option value="">Best available</option>
                         ${formatOptions}
@@ -311,6 +344,9 @@ function renderVideos() {
     addDragAndDropHandlers();
 }
 
+
+
+
 window.pasteLink = (index) => { urlArea.value = videos[index]?.url || ""; urlArea.focus(); };
 window.openLink = (index) => { if(videos[index]) shell.openExternal(videos[index].url); };
 window.openThumbnail = (index) => { if(videos[index]?.thumbnail) shell.openExternal(videos[index].thumbnail); };
@@ -327,6 +363,7 @@ window.removeVideo = (index) => {
     if (!videos[index]) return;
     if (clipboard.readText().trim() === videos[index].url) clipboard.writeText("");
     if (clipboard.readText().trim() === videos[index].url) clipboard.writeText("");
+
     if (urlArea.value.trim() === videos[index].url) {
         m3u8Log.textContent = "";
         m3u8Log.style.color = "";
@@ -362,32 +399,56 @@ if (clearListBtn) {
     });
 }
 
+
+
 if (urlArea) {
-    urlArea.addEventListener("dragover", e => { e.preventDefault(); urlArea.style.border = "2px dashed #007ACC"; });
-    urlArea.addEventListener("dragleave", e => { e.preventDefault(); urlArea.style.border = ""; });
+    const allowedExtensions = [".txt", ".json", ".html", ".htm", ".md", ".dat"];
+
+    urlArea.addEventListener("dragover", e => {
+        e.preventDefault();
+        urlArea.style.border = "2px dashed #007ACC";
+    });
+
+    urlArea.addEventListener("dragleave", e => {
+        e.preventDefault();
+        urlArea.style.border = "";
+    });
+
     urlArea.addEventListener("drop", e => {
         e.preventDefault();
         urlArea.style.border = "";
-        if(e.dataTransfer.files.length > 0){
-            const file = e.dataTransfer.files[0];
-            if(file.type === "text/plain" || file.name.endsWith(".txt")){
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    processTextInput(event.target.result).forEach(url => {
-                        if(isValidUrl(url)) addVideo(url);
-                    });
-                };
-                reader.readAsText(file);
-            } else alert("Drag a text file (.txt) with links, one per line.");
+
+        const processUrls = (text) => {
+            const urlRegex = /https?:\/\/[^\s"'<>]+/gi; 
+            const urls = (text.match(urlRegex) || []).map(u => u.trim()).filter(u => isValidUrl(u));
+            return [...new Set(urls)];
+        };
+
+        // File
+        if (e.dataTransfer.files.length > 0) {
+            Array.from(e.dataTransfer.files).forEach(file => {
+                const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+                if (allowedExtensions.includes(ext)) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        processUrls(event.target.result).forEach(url => addVideo(url));
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert(`Drag a valid file (${allowedExtensions.join(", ")}) with links.`);
+                }
+            });
             return;
         }
 
         const textData = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
-        if(textData) processTextInput(textData).forEach(url => {
-            if(isValidUrl(url)) addVideo(url);
-        });
+        if (textData) {
+            processUrls(textData).forEach(url => addVideo(url));
+        }
     });
 }
+
+
 
 function fetchVideoDetails(video){
     if(!binPaths?.ytDlp) return;
@@ -419,11 +480,8 @@ function fetchVideoDetails(video){
 }
 function updateM3u8Live(video, m3u8Url) {
     if (!video || !m3u8Url) return;
-
     video.url = m3u8Url;
-
     video.thumbnail = video.thumbnail || "";
-
     video.status = "HLS detected, updated URL";
     renderVideos();
 }
@@ -445,21 +503,21 @@ window.downloadVideo = (index) => {
 
     const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
     if(!videoDiv) return;
-    const progressBar = videoDiv.querySelector(".thumb-progress-bar");
+    const progressBar = videoDiv.querySelector(".thumb-progress-bar"); // ← qui
     const statusText = videoDiv.querySelector(".status");
     const detailsText = videoDiv.querySelector(".download-details");
 	
 
     if(progressBar){ progressBar.style.width = "0%"; progressBar.style.backgroundColor = "#2196F3"; }
-    if(statusText) statusText.textContent = "⏳ Work in queue...";
+    if(statusText) statusText.textContent = "⏳ Queued...";
     if(detailsText) detailsText.textContent = "⬇️";
 
     let stopBtn = videoDiv.querySelector(".stop-btn");
     if(!stopBtn){
         stopBtn = document.createElement("button");
-        stopBtn.textContent = "🛑";
+        stopBtn.textContent = "🛑🛑";
         stopBtn.className = "stop-btn";
-        stopBtn.title = "Stop download";
+        stopBtn.title = "Ferma download";
         stopBtn.onclick = () => { ipcRenderer.send("stop-download", video.url); stopBtn.disabled=true; };
         videoDiv.appendChild(stopBtn);
     }
@@ -486,18 +544,36 @@ ipcRenderer.on("download-progress", (event, {url,data})=>{
 });
 
 
-ipcRenderer.on("download-complete", (event,{url,code})=>{
-    const video = videos.find(v=>v.url===url); if(!video) return;
-    const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`); if(!videoDiv) return;
-    const progressBar = videoDiv.querySelector(".thumb-progress-bar"); 
+ipcRenderer.on("download-complete", (event, { url, code, error }) => {
+    const video = videos.find(v => v.url === url);
+    if (!video) return;
+
+    const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
+    if (!videoDiv) return;
+
+    const progressBar = videoDiv.querySelector(".thumb-progress-bar");
     const statusText = videoDiv.querySelector(".status");
     const detailsText = videoDiv.querySelector(".download-details");
     const stopBtn = videoDiv.querySelector(".stop-btn");
 
-    if(progressBar){ progressBar.style.width="100%"; progressBar.style.backgroundColor = code===0 ? "#4CAF50" : "#F44336"; }
-    if(statusText) statusText.textContent = code===0 ? "✅ Completed" : "💀 Error";
-    if(detailsText) detailsText.textContent = code===0 ? "⬇️   Completed" : "💀 Error";
-    if(stopBtn) stopBtn.disabled=true;
+    if (progressBar) {
+        progressBar.style.width = "100%";
+        progressBar.style.backgroundColor = code === 0 ? "#4CAF50" : "#F44336";
+    }
+
+    if (statusText) {
+        statusText.textContent = code === 0
+            ? "✅ Completed"
+            : `💀 Error${error ? ": " + error : ""}`;
+    }
+
+    if (detailsText) {
+        detailsText.textContent = code === 0
+            ? "⬇️   Completed"
+            : `💀 ${error || "Unknown error"}`;
+    }
+
+    if (stopBtn) stopBtn.disabled = true;
 });
 
 ipcRenderer.on("download-stopped",(event,{url})=>{
@@ -513,10 +589,10 @@ ipcRenderer.on("download-stopped",(event,{url})=>{
     if(detailsText) detailsText.textContent="⬇️   Interrupted";
     if(stopBtn) stopBtn.disabled=true;
 });
-
+//
 const logArea = document.getElementById("logArea");
 
-
+// ----------------- ADD LINK BUTTON -----------------
 addInlineBtn.addEventListener("click", () => {
     const text = urlArea.value.trim();
     if (!text) return;
@@ -534,9 +610,8 @@ addInlineBtn.addEventListener("click", () => {
     }
 
     urlArea.value = ""; 
-    setTimeout(() => { logArea.textContent = ""; }, 5000); 
+    setTimeout(() => { logArea.textContent = ""; }, 5000);
 });
-
 
 pasteBtn.addEventListener("click", async () => {
     try {
@@ -623,10 +698,10 @@ function addDragAndDropHandlers(){document.querySelectorAll('.video-item').forEa
     item.addEventListener('dragend', handleDragEnd,false);
 });}
 
-
 function escapeHtml(str){if(!str) return ""; return str.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function getOptions(){ return { audioOnly: audioOnlyChk.checked, convertMkv: convertMkvChk.checked, playlist: playlistChk.checked }; }
 function saveSettingsToMain(){ ipcRenderer.send("save-settings",{links: videos.map(v=>v.url), options:getOptions(), downloadFolder}); }
+
 
 const updateBtn = document.getElementById("updateYtDlpBtn");
 const updateLog = document.getElementById("updateLog");

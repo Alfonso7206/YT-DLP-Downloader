@@ -1,9 +1,7 @@
-
 const { app, BrowserWindow, ipcMain, shell, Menu, nativeTheme, dialog } = require("electron");
-const { spawn } = require("child_process");
+const { spawn, exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
-
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 
@@ -21,12 +19,34 @@ let settings = {
 };
 
 
+function logError(message) {
+    const logFile = path.join(app.getPath("userData"), "error.log");
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logFile, `[${timestamp}] ${message}\n`, "utf8");
+}
+
+
+function getBinDir() {
+    return app.isPackaged
+        ? path.join(process.resourcesPath, "..", "bin")
+        : path.join(__dirname, "Bin");
+}
+const ytDlpPath = path.join(getBinDir(), process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+
+function ensureYtDlpExists() {
+    if (!fs.existsSync(ytDlpPath)) {
+        const msg = `yt-dlp not found in: ${ytDlpPath}`;
+        logError(msg);
+        throw new Error(msg);
+    }
+}
+
+
 function loadSettings() {
     try {
         if (fs.existsSync(SETTINGS_PATH)) {
             const raw = fs.readFileSync(SETTINGS_PATH, "utf-8");
             const s = JSON.parse(raw);
-
             settings = {
                 links: s.links || [],
                 options: s.options || { audioOnly: false, convertMkv: false, playlist: false },
@@ -34,7 +54,6 @@ function loadSettings() {
                 theme: s.theme || "dark",
             };
         } else {
-
             saveSettings();
         }
     } catch (e) {
@@ -50,22 +69,13 @@ function saveSettings() {
     }
 }
 
-
 loadSettings();
 nativeTheme.themeSource = settings.theme;
-
 
 function sendToRenderer(channel, data) {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(channel, data);
     }
-}
-
-
-function getBinDir() {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, "..", "bin")
-    : path.join(__dirname, "Bin");
 }
 
 
@@ -81,7 +91,6 @@ function createWindow() {
     });
 
     mainWindow.loadFile("index.html");
-
 
     Menu.setApplicationMenu(null);
     mainWindow.setMenuBarVisibility(false);
@@ -105,8 +114,6 @@ ipcMain.handle("get-settings", () => {
     };
 });
 
-
-//
 ipcMain.on("save-settings", (event, newSettings) => {
     if (typeof newSettings === "object") {
         if (Array.isArray(newSettings.links)) settings.links = newSettings.links;
@@ -120,12 +127,29 @@ ipcMain.on("save-settings", (event, newSettings) => {
     saveSettings();
 });
 
-
 ipcMain.handle("open-folder", async () => {
     const folder = settings.downloadFolder || app.getPath("downloads");
     const result = await shell.openPath(folder);
     if (result) console.error("Error opening folder:", result);
     return folder;
+});
+
+
+ipcMain.handle("yt-dlp-help", async () => {
+    try {
+        ensureYtDlpExists();
+        return new Promise((resolve, reject) => {
+            exec(`"${ytDlpPath}" -h`, (error, stdout, stderr) => {
+                if (error) {
+                    logError(`Error yt-dlp-help: ${error.message}`);
+                    return reject(error.message);
+                }
+                resolve(stdout || stderr);
+            });
+        });
+    } catch (err) {
+        return Promise.reject(err.message);
+    }
 });
 
 
@@ -162,12 +186,15 @@ ipcMain.on("set-theme", (event, newTheme) => {
     saveSettings();
 });
 
-const ytDlpPath = path.join(getBinDir(), process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 
 ipcMain.handle("update-yt-dlp", async (event) => {
-    return new Promise((resolve, reject) => {
-        const ytDlpPath = path.join(getBinDir(), process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+    try {
+        ensureYtDlpExists();
+    } catch (err) {
+        return Promise.reject(err.message);
+    }
 
+    return new Promise((resolve, reject) => {
         const proc = spawn(ytDlpPath, ["-U"]);
         let output = "";
 
@@ -181,15 +208,16 @@ ipcMain.handle("update-yt-dlp", async (event) => {
             event.sender.send("update-log", data.toString());
         });
 
-        proc.on("close", code => {
-            resolve({ code, output });
-        });
+        proc.on("close", code => resolve({ code, output }));
 
         proc.on("error", err => {
+            logError(`Errore update-yt-dlp: ${err.message}`);
             reject(err);
         });
     });
-	});
+});
+
+
 ipcMain.handle("start-download", (event, video) => {
     startDownload(video);
 });
@@ -209,15 +237,16 @@ ipcMain.on("stop-download", (event, urlOrPid) => {
         }
     }
 });
-const { exec } = require("child_process");
-
-
 
 function startDownload(video) {
-    const outputDir = video.outputDir || settings.downloadFolder || app.getPath("downloads");
-    const binDir = getBinDir();
-    const ytDlpPath = path.join(binDir, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+    try {
+        ensureYtDlpExists();
+    } catch (err) {
+        sendToRenderer("download-complete", { url: video.url, code: 1, error: err.message });
+        return;
+    }
 
+    const outputDir = video.outputDir || settings.downloadFolder || app.getPath("downloads");
     const args = ["-o", path.join(outputDir, "%(title)s.%(ext)s")];
 
     if (video.audioOnly) {
@@ -247,7 +276,7 @@ function startDownload(video) {
             sendToRenderer("download-complete", { url: video.url, code });
         });
     } catch (e) {
-        console.error("Errore startDownload:", e);
+        logError(`Errore startDownload: ${e.message}`);
         sendToRenderer("download-complete", { url: video.url, code: 1 });
     }
 }
