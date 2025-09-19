@@ -1,8 +1,8 @@
-;by AL
-#define MyAppName "YT-DLP Downloader"
-#define MyAppVersion "1.0"
-#define MyAppExeName "YT-DLP Downloader.exe"
-#define id "YTDLPD18092025"
+
+#define MyAppName "AL YT-DLP Downloader"
+#define MyAppVersion "1.3"
+#define MyAppExeName "AL YT-DLP Downloader.exe"
+#define id "AL YT-DLP Downloader"
 #define AppPublisher "AL"
 
 
@@ -22,13 +22,14 @@ OutputBaseFilename=setup_{#MyAppName}
 SetupIconFile=assets\icon.ico
 SolidCompression=yes
 WizardStyle=classic
-Compression=none
+;Compression=none
 OutputDir=.
 UninstallFilesDir={app}\Unins
 InternalCompressLevel=ultra
 AppPublisher={#AppPublisher}
 WizardSmallImageFile=assets\ws.bmp
 DisableFinishedPage=yes
+
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -39,5 +40,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "dist\win-unpacked\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+
 [Icons]
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
