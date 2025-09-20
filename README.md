@@ -4,3 +4,7 @@
 [Electron](https://www.electronjs.org/)
 [node.js](https://nodejs.org/en/download)
 
+update
+<img width="1186" height="893" alt="electron_Pn87mBEVvl" src="https://github.com/user-attachments/assets/492c7f1d-fdc7-4f52-8d44-463d52d0af65" />
+
+Binaries are not included, you must click the >Download Binaries button to include them.
