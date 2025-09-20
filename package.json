@@ -1,6 +1,6 @@
 {
   "name": "ytdlp-downloader",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "YT-DLP Downloader",
   "main": "main.js",
   "scripts": {
@@ -18,11 +18,13 @@
       "main.js",
       "index.html",
       "renderer.js",
-	  "m3u8Resolver.js",
+      "m3u8Resolver.js",
       "style.css",
       "package.json",
       "!*.bat",
       "!*.7z",
+	  "!*.iss",
+	  "!assets/ws.bmp",
       "!README.md"
     ],
     "extraFiles": [
@@ -41,6 +43,7 @@
   },
   "dependencies": {
     "axios": "^1.12.2",
+    "extract-zip": "^2.0.1",
     "playwright": "^1.55.0"
   },
   "devDependencies": {

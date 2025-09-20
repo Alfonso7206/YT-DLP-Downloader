@@ -36,6 +36,7 @@ const resolveM3u8Btn = document.getElementById("resolveM3u8Btn");
 
 if (resolveM3u8Btn && urlArea) {
     resolveM3u8Btn.addEventListener("click", async () => {
+        // blocca il bottone per evitare doppie richieste
         resolveM3u8Btn.disabled = true;
         resolveM3u8Btn.textContent = "Converting... ⏳";
 
@@ -46,8 +47,6 @@ if (resolveM3u8Btn && urlArea) {
     });
 }
 
-
-
 pasteBtn.addEventListener("click", () => {
     if (!urlArea) return;
     const text = clipboard.readText().trim();
@@ -57,11 +56,12 @@ pasteBtn.addEventListener("click", () => {
     }
 });
 
-
+// Bottone "Add link" ✔️
 addInlineBtn.addEventListener("click", () => {
     if (!urlArea) return;
     const text = urlArea.value.trim();
     if (!text) return;
+    // Processa le righe valide
     processTextInput(text).forEach(url => {
         if (isValidUrl(url)) addVideo(url);
     });
@@ -76,20 +76,25 @@ function setFolderPath(path) {
 if (resetTextareaBtn && urlArea) {
     resetTextareaBtn.addEventListener("click", () => {
         urlArea.value = "";
-        m3u8Log.textContent = "";  
+        m3u8Log.textContent = "";  // Pulisce anche eventuale log
         m3u8Log.style.color = "";
         urlArea.focus();
     });
 }
 
+
+// ------------------ FILTRO CARATTERI NON VALIDI ------------------
 function filterInvalidChars(text) {
+    // Permette solo caratteri visibili ASCII, numeri, lettere, punteggiatura base e spazi
     return text.replace(/[^\x20-\x7E\n\r]/g, '');
 }
 
+// Applica filtro quando si incolla o digita nella textarea
 urlArea.addEventListener("input", () => {
     urlArea.value = filterInvalidChars(urlArea.value);
 });
 
+// Applica filtro ai file .txt caricati
 function processTextInput(text) {
     return filterInvalidChars(text).split(/\r?\n/).map(u => u.trim()).filter(u => u);
 }
@@ -140,20 +145,21 @@ const closeBtn = document.getElementById('closeYtHelp');
 if (ytBtn && outputContainer && output && closeBtn) {
     ytBtn.addEventListener('click', async () => {
         outputContainer.style.display = 'block';
-        output.textContent = "Loading...";
-        closeBtn.style.display = 'none';
+        output.textContent = "Caricamento...";
+        closeBtn.style.display = 'none'; // nascondi il bottone inizialmente
 
         try {
             const result = await ipcRenderer.invoke('yt-dlp-help');
             output.textContent = result;
             
-            // Mostra il bottone dopo 3 secondi            setTimeout(() => {
+            // Mostra il bottone dopo 3 secondi
+            setTimeout(() => {
                 closeBtn.style.display = 'inline-block';
             }, 3000);
 
         } catch (err) {
             output.textContent = `Errore: ${err}`;
-            closeBtn.style.display = 'inline-block'; 
+            closeBtn.style.display = 'inline-block'; // mostra comunque in caso di errore
         }
     });
 
@@ -204,8 +210,8 @@ setFolderBtn.addEventListener("click", async () => {
         ipcRenderer.invoke("save-download-folder", folder).then(savedFolder => {
             downloadFolder = savedFolder;
             if (folderInput) {
-                folderInput.value = savedFolder;  
-                setFolderPath(savedFolder);       
+                folderInput.value = savedFolder;  // testo normale
+                setFolderPath(savedFolder);       // evidenzia unità
             }
             saveSettingsToMain();
         });
@@ -248,14 +254,14 @@ function addVideo(url) {
     fetchVideoDetails(video);
     saveSettingsToMain();
 }
-
+// Supponendo che tu abbia un contenitore div che raggruppa i due bottoni
 const groupBox = document.getElementById("groupBox");
 
-
+// Funzione per mostrare/nascondere il groupBox con fade
 function updateGroupBoxVisibility() {
     if (!groupBox) return;
     if (videos.length > 0) {
-        groupBox.style.display = "flex";      
+        groupBox.style.display = "flex";        // Mostra il contenitore
         requestAnimationFrame(() => {
             groupBox.style.opacity = 1;          // Fade-in
         });
@@ -268,7 +274,7 @@ function updateGroupBoxVisibility() {
 }
 function renderVideos() {
     videoList.innerHTML = "";
-    let anyThumbnailLoaded = false; 
+    let anyThumbnailLoaded = false; // ← variabile per controllare se almeno una miniatura c'è
 
     videos.forEach((video, index) => {
         const div = document.createElement("div");
@@ -279,7 +285,7 @@ function renderVideos() {
         // Thumbnail o spinner
         let thumbHTML = '';
         if(video.thumbnail){
-            anyThumbnailLoaded = true; 
+            anyThumbnailLoaded = true; // almeno una miniatura presente
             thumbHTML = `<img src="${video.thumbnail}" class="thumbnail" onclick="openThumbnail(${index})">`;
         } else {
             thumbHTML = `<div class="spinner"></div>`;
@@ -310,7 +316,7 @@ function renderVideos() {
                 <div class="status">${video.status || ""}</div>
                 <label>
                     <select class="quality-select" onchange="setFormat(${index}, this.value)">
-                        <option value="">Best available</option>
+                        <option value="">Best Resolution</option>
                         ${formatOptions}
                     </select>
                 </label>
@@ -328,8 +334,10 @@ function renderVideos() {
         videoList.appendChild(div);
     });
 
+    // Mostra/Nascondi bottoni globali
     clearListBtn.style.display = videos.length > 0 ? "inline-block" : "none";
 
+    // Mostra i bottoni solo se c'è almeno una miniatura
     const groupBox = document.getElementById("groupBox");
     if(groupBox){
         if(anyThumbnailLoaded){
@@ -343,9 +351,6 @@ function renderVideos() {
 
     addDragAndDropHandlers();
 }
-
-
-
 
 window.pasteLink = (index) => { urlArea.value = videos[index]?.url || ""; urlArea.focus(); };
 window.openLink = (index) => { if(videos[index]) shell.openExternal(videos[index].url); };
@@ -362,8 +367,10 @@ window.openDownloadFolder = (index) => {
 window.removeVideo = (index) => {
     if (!videos[index]) return;
     if (clipboard.readText().trim() === videos[index].url) clipboard.writeText("");
+	    // Cancella clipboard se corrisponde al video
     if (clipboard.readText().trim() === videos[index].url) clipboard.writeText("");
 
+    // Cancella il log se la textarea contiene il link rimosso
     if (urlArea.value.trim() === videos[index].url) {
         m3u8Log.textContent = "";
         m3u8Log.style.color = "";
@@ -418,10 +425,11 @@ if (urlArea) {
         e.preventDefault();
         urlArea.style.border = "";
 
+        // Nuova funzione per processare URL da qualunque testo
         const processUrls = (text) => {
-            const urlRegex = /https?:\/\/[^\s"'<>]+/gi; 
+            const urlRegex = /https?:\/\/[^\s"'<>]+/gi; // trova URL ovunque
             const urls = (text.match(urlRegex) || []).map(u => u.trim()).filter(u => isValidUrl(u));
-            return [...new Set(urls)];
+            return [...new Set(urls)]; // rimuove duplicati
         };
 
         // File
@@ -441,14 +449,13 @@ if (urlArea) {
             return;
         }
 
+        // Testo incollato / URL
         const textData = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
         if (textData) {
             processUrls(textData).forEach(url => addVideo(url));
         }
     });
 }
-
-
 
 function fetchVideoDetails(video){
     if(!binPaths?.ytDlp) return;
@@ -480,8 +487,14 @@ function fetchVideoDetails(video){
 }
 function updateM3u8Live(video, m3u8Url) {
     if (!video || !m3u8Url) return;
+
+    // Aggiorna l'URL del video con quello M3U8
     video.url = m3u8Url;
+
+    // Mantieni la miniatura originale
     video.thumbnail = video.thumbnail || "";
+
+    // Aggiorna lo stato e re-renderizza
     video.status = "HLS detected, updated URL";
     renderVideos();
 }
@@ -509,7 +522,7 @@ window.downloadVideo = (index) => {
 	
 
     if(progressBar){ progressBar.style.width = "0%"; progressBar.style.backgroundColor = "#2196F3"; }
-    if(statusText) statusText.textContent = "⏳ Queued...";
+    if(statusText) statusText.textContent = "⏳ Queue/progress...";
     if(detailsText) detailsText.textContent = "⬇️";
 
     let stopBtn = videoDiv.querySelector(".stop-btn");
@@ -517,7 +530,7 @@ window.downloadVideo = (index) => {
         stopBtn = document.createElement("button");
         stopBtn.textContent = "🛑🛑";
         stopBtn.className = "stop-btn";
-        stopBtn.title = "Ferma download";
+        stopBtn.title = "Stop download";
         stopBtn.onclick = () => { ipcRenderer.send("stop-download", video.url); stopBtn.disabled=true; };
         videoDiv.appendChild(stopBtn);
     }
@@ -528,7 +541,7 @@ window.downloadVideo = (index) => {
 ipcRenderer.on("download-progress", (event, {url,data})=>{
     const video = videos.find(v=>v.url===url); if(!video) return;
     const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`); if(!videoDiv) return;
-    const progressBar = videoDiv.querySelector(".thumb-progress-bar"); 
+    const progressBar = videoDiv.querySelector(".thumb-progress-bar"); // ← qui
     const detailsText = videoDiv.querySelector(".download-details");
 
     const percentMatch = data.match(/(\d+(\.\d+)?)%/);
@@ -609,10 +622,11 @@ addInlineBtn.addEventListener("click", () => {
         logArea.style.color = "green";
     }
 
-    urlArea.value = ""; 
-    setTimeout(() => { logArea.textContent = ""; }, 5000);
+    urlArea.value = ""; // pulisce textarea
+    setTimeout(() => { logArea.textContent = ""; }, 5000); // sparisce dopo 5s
 });
 
+// ----------------- PASTE BUTTON -----------------
 pasteBtn.addEventListener("click", async () => {
     try {
         const text = await navigator.clipboard.readText();
@@ -638,20 +652,21 @@ pasteBtn.addEventListener("click", async () => {
         setTimeout(() => { logArea.textContent = ""; }, 5000);
 
     } catch (err) {
-        console.error("Error reading from clipboard:", err);
+        console.error("🥺 Error reading from clipboard:", err);
         logArea.textContent = "❌ Cannot read from clipboard.";
         logArea.style.color = "red";
         setTimeout(() => { logArea.textContent = ""; }, 5000);
     }
 });
 
-
+// ------------------ DOWNLOAD ALL ------------------
 if(downloadAllBtn){
     downloadAllBtn.addEventListener("click", ()=>{
         videos.forEach((_,idx)=>window.downloadVideo(idx));
     });
 }
 
+// Pulisce il log quando la textarea è vuota
 urlArea.addEventListener("input", () => {
     if (!urlArea.value.trim()) {
         m3u8Log.textContent = "";
@@ -698,10 +713,13 @@ function addDragAndDropHandlers(){document.querySelectorAll('.video-item').forEa
     item.addEventListener('dragend', handleDragEnd,false);
 });}
 
+
 function escapeHtml(str){if(!str) return ""; return str.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function getOptions(){ return { audioOnly: audioOnlyChk.checked, convertMkv: convertMkvChk.checked, playlist: playlistChk.checked }; }
 function saveSettingsToMain(){ ipcRenderer.send("save-settings",{links: videos.map(v=>v.url), options:getOptions(), downloadFolder}); }
 
+
+// --- altre funzioni esistenti ---
 
 const updateBtn = document.getElementById("updateYtDlpBtn");
 const updateLog = document.getElementById("updateLog");
@@ -715,6 +733,7 @@ updateBtn.addEventListener("click", async () => {
         const result = await ipcRenderer.invoke("update-yt-dlp");
         updateLog.textContent = result.output || "✅ Update finished";
 
+        // Timer per far sparire il log dopo 5 secondi
         setTimeout(() => {
             updateLog.textContent = "";
         }, 5000);
@@ -729,6 +748,55 @@ updateBtn.addEventListener("click", async () => {
         updateBtn.textContent = "Update YT-DLP ⬆️";
     }
 });
+//
+const downloadBtn = document.getElementById("download-binaries");
+const downloadBarInner = document.getElementById("download-bar-inner");
+const downloadPercentInner = document.getElementById("download-percent-inner");
+const downloadStatus = document.getElementById("download-status");
 
+
+// Listener del bottone "Scarica Binaries"
+downloadBtn.addEventListener("click", async () => {
+    if(downloadBarInner) downloadBarInner.style.width = "0%";
+    if(downloadPercentInner) downloadPercentInner.innerText = "0%";
+    if(downloadStatus) downloadStatus.innerText = "";
+
+    try {
+        const result = await ipcRenderer.invoke("download-binaries");
+        if(downloadStatus) downloadStatus.innerText = result;
+
+        setTimeout(() => {
+            if(downloadBarInner) downloadBarInner.style.width = "0%";
+            if(downloadPercentInner) downloadPercentInner.innerText = "0%";
+            if(downloadStatus) downloadStatus.innerText = "";
+        }, 3000);
+
+    } catch (err) {
+        if(downloadStatus) downloadStatus.innerText = `Error: ${err}`;
+        setTimeout(() => {
+            if(downloadBarInner) downloadBarInner.style.width = "0%";
+            if(downloadPercentInner) downloadPercentInner.innerText = "0%";
+            if(downloadStatus) downloadStatus.innerText = "";
+        }, 3000);
+    }
+});
+function setDownloadProgressInner(percent, message) {
+    if(downloadBarInner) downloadBarInner.style.width = `${percent}%`;
+    if(downloadPercentInner) downloadPercentInner.innerText = `${percent}%`;
+    if(downloadStatus) downloadStatus.innerText = message;
+}
+
+ipcRenderer.on("download-binaries-log", (event, msg) => {
+    // Mantieni percentuale corrente, aggiorna solo il messaggio
+    const barWidth = parseFloat(document.getElementById("download-bar-inner").style.width) || 0;
+    setDownloadProgressInner(barWidth, msg);
+});
+
+ipcRenderer.on("download-binaries-progress", (event, { percent }) => {
+    const currentMsg = document.getElementById("download-status").innerText || "Downloading...";
+    setDownloadProgressInner(percent, currentMsg);
+});
+
+// --- fine file ---
 window.addVideo = addVideo;
 

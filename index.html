@@ -6,121 +6,77 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body data-theme="dark">
-<h4>🎬 YT-DLP Downloader 🎬</h4>
+<h5>💊 YT-DLP Downloader 💊</h5>
+
+<button id="ytDlpHelpBtn">📜 Help yt-dlp</button>
+<div id="ytHelpContainer">
+    <button id="closeYtHelp">🔴</button>
+    <pre id="outputHelp"></pre>
+</div>
+
 <fieldset id="field1" title="Options Folder">  
   <button id="openFolderBtn">Open Folder</button>
   <button id="setFolderBtn">Save to</button>
-  <input type="text" id="folderLabel" readonly style="width:300px;" />
+  <input type="text" id="folderLabel" readonly />
 </fieldset>
 
-<button id="ytDlpHelpBtn">📜 Help yt-dlp</button>
-<div id="ytHelpContainer" style="display: none;">
-    <button id="closeYtHelp" style="
-    border: none;
-    background: none;
-    color: red;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 5px;
-">🔴</button>
-    <pre id="outputHelp" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto; color: lime;"></pre>
-</div>
-<pre id="outputHelp" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></pre>
 <fieldset id="field2" title="Options Video-Audio">
-  <label>
-    <input type="checkbox" id="audioOnlyChk"> 🎵 Download MP3
-  </label>
-  <label>
-    <input type="checkbox" id="convertMkvChk"> 🔄 Convert to MKV
-  </label>
-  <label>
-    <input type="checkbox" id="playlistChk"> 📃 Download Playlist
-  </label>
+  <label><input type="checkbox" id="audioOnlyChk"> 🎵 Download MP3</label>
+  <label><input type="checkbox" id="convertMkvChk"> 🔄 Convert to MKV</label>
+  <label><input type="checkbox" id="playlistChk"> 📃 Download Playlist</label>
 </fieldset>
-<br>
 
 <div id="groupBox">
-    <button id="downloadAllBtn">Download All ⬇️</button>
-    <button id="resolveM3u8Btn">Get Real M3U8 🎬</button>
-	<button id="updateYtDlpBtn">Update yt-dlp ⬆️</button> 
-   <div id="updateLog" style="margin-top:5px; font-size:0.9em; color:lime; max-height:150px; overflow:auto;"></div> 
-<div id="logArea" style="margin-top:5px; font-size:0.9em; color:lime;"></div>
+    <button id="downloadAllBtn">⬇️ Download All</button>
+    <button id="resolveM3u8Btn">🔗 Get Real M3U8</button>
+    <button id="updateYtDlpBtn">⬆️ Update yt-dlp ⬆️</button> 
+    <div id="updateLog"></div> 
+    <div id="logArea"></div>
 </div>
-<div id="urlContainer" style="position: relative; width: 100%;">
-    <textarea id="urlArea" placeholder="links..." style="width: 100%; padding-right: 90px;"></textarea>
+<button id="download-binaries">📦 Download Binaries</button>
 
-<button id="addInlineBtn" title="Add link" style="
-    position: absolute;
-    top: 5px;
-    right: 15px; /* leggermente più a destra */
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    font-size: 18px;
-    line-height: 28px;
-    color: dodgerblue;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-">➕</button>
-
-<button id="resetTextareaBtn" title="Clear link" style="
-    position: absolute;
-    top: 38px;
-    right: 15px; 
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    font-size: 18px;
-    line-height: 28px;
-    color: red;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-">❌</button>
-
-<button id="pasteBtn" title="Paste link" style="
-    position: absolute;
-    top: 71px;
-    right: 15px; 
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    font-size: 18px;
-    line-height: 28px;
-    color: #0b84ff;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-">📋</button>
+<div id="download-container-inner">
+    <div id="download-bar-inner">
+        <span id="download-percent-inner">0%</span>
+    </div>
+</div>
+<div id="download-status"></div>
 
 
+
+<div id="urlContainer">
+    <textarea id="urlArea" placeholder="links..."></textarea>
+
+    <button id="addInlineBtn" title="Add link">➕</button>
+    <button id="resetTextareaBtn" title="Clear link">❌</button>
+    <button id="pasteBtn" title="Paste link">📋</button>
+</div>
 
 <div id="popupOverlay" class="popup-overlay">
   <div class="popup">
-   <h3 id="reloadListTitle">You want to load the links?</h3>
+    <h3 id="reloadListTitle">👀 You want to load the links?</h3>
     <div class="popup-buttons">
-      <button id="popupYes">Yes</button>
-      <button id="popupNo">No</button>
+      <button id="popupYes">✔️</button>
+      <button id="popupNo">❌</button>
     </div>
   </div>
 </div>
 
 <div id="clearPopupOverlay">
   <div class="popup">
-    <h3>Do you really want to delete the entire list?</h3>
+    <h3>⚠️ Do you really want to delete the entire list?</h3>
     <div class="popup-buttons">
-      <button id="clearPopupYes">Yes</button>
-      <button id="clearPopupNo">No</button>
+      <button id="clearPopupYes">✔️</button>
+      <button id="clearPopupNo">❌</button>
     </div>
   </div>
 </div>
 
-<button id="clearList">❌ Clear List</button>
+<button id="clearList">🗑️ Clear List</button>
 
 <div id="videoList"></div>
 	
-<button id="themeToggle" style="position:fixed; top:10px; right:10px; z-index:1000; font-size:13px;">🌙</button>
+<button id="themeToggle">🌙</button>
 <script src="renderer.js"></script>
 </body>
 </html>
