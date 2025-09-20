@@ -1,6 +1,6 @@
 
 #define MyAppName "AL YT-DLP Downloader"
-#define MyAppVersion "1.3"
+#define MyAppVersion "2.0"
 #define MyAppExeName "AL YT-DLP Downloader.exe"
 #define id "AL YT-DLP Downloader"
 #define AppPublisher "AL"
@@ -25,7 +25,7 @@ WizardStyle=classic
 ;Compression=none
 OutputDir=.
 UninstallFilesDir={app}\Unins
-InternalCompressLevel=ultra
+InternalCompressLevel=ultra64
 AppPublisher={#AppPublisher}
 WizardSmallImageFile=assets\ws.bmp
 DisableFinishedPage=yes
