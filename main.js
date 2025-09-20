@@ -94,7 +94,8 @@
 
 			Menu.setApplicationMenu(null);
 			mainWindow.setMenuBarVisibility(false);
-
+			  // 👇 forza apertura DevTools
+            //mainWindow.webContents.openDevTools();
 			mainWindow.webContents.on("before-input-event", (event, input) => {
 				if ((input.control || input.meta) && ["r", "i"].includes(input.key.toLowerCase())) {
 					event.preventDefault();

@@ -2,6 +2,7 @@ const axios = require("axios");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
 const { ipcRenderer, clipboard, shell } = require("electron");
 const { spawn } = require("child_process");
+const Bottleneck = require("bottleneck");
 
 let downloadFolder = null;
 let binPaths = null;
@@ -15,7 +16,11 @@ function isValidUrl(string) {
         return false;
     }
 }
-
+// Limiter globale: massimo 2 download simultanei, 500ms tra richieste
+const downloadLimiter = new Bottleneck({
+    maxConcurrent: 5,
+    minTime: 500
+});
 // ------------------ DOM ELEMENTS ------------------
 const urlArea = document.getElementById("urlArea");
 const videoList = document.getElementById("videoList");
@@ -500,42 +505,49 @@ function updateM3u8Live(video, m3u8Url) {
 }
 
 window.downloadVideo = (index) => {
+    downloadLimiter.schedule(() => actualDownloadVideo(index));
+};
+
+function actualDownloadVideo(index){
     const video = videos[index]; if(!video) return;
+
+    // --- Aggiorna stato in coda ---
+    video.status = "⏳ Queued...";
+    const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
+    if(videoDiv){
+        const statusText = videoDiv.querySelector(".status");
+        if(statusText) statusText.textContent = video.status;
+    }
+
     const audioOnly = audioOnlyChk.checked;
     const convertMkv = convertMkvChk.checked;
     const playlist = playlistChk.checked;
     const selectedFormat = video.format || null;
-    ipcRenderer.invoke("start-download", {
-        ...video,
-        outputDir: downloadFolder || null,
-        audioOnly,
-        recode: convertMkv ? "mkv" : null,
-        playlist,
-        format: selectedFormat
+
+    // Scarica dopo la coda del limiter
+    return new Promise(resolve => {
+        downloadLimiter.schedule(async () => {
+            // --- Aggiorna stato download effettivo ---
+            video.status = "⏳ Downloading...";
+            if(videoDiv){
+                const statusText = videoDiv.querySelector(".status");
+                if(statusText) statusText.textContent = video.status;
+            }
+
+            await ipcRenderer.invoke("start-download", {
+                ...video,
+                outputDir: downloadFolder || null,
+                audioOnly,
+                recode: convertMkv ? "mkv" : null,
+                playlist,
+                format: selectedFormat
+            });
+
+            resolve(); // segnala al limiter che ha finito
+        });
     });
+}
 
-    const videoDiv = document.querySelector(`.video-item[data-pid="${video.pid}"]`);
-    if(!videoDiv) return;
-    const progressBar = videoDiv.querySelector(".thumb-progress-bar"); // ← qui
-    const statusText = videoDiv.querySelector(".status");
-    const detailsText = videoDiv.querySelector(".download-details");
-	
-
-    if(progressBar){ progressBar.style.width = "0%"; progressBar.style.backgroundColor = "#2196F3"; }
-    if(statusText) statusText.textContent = "⏳ Queue/progress...";
-    if(detailsText) detailsText.textContent = "⬇️";
-
-    let stopBtn = videoDiv.querySelector(".stop-btn");
-    if(!stopBtn){
-        stopBtn = document.createElement("button");
-        stopBtn.textContent = "🛑🛑";
-        stopBtn.className = "stop-btn";
-        stopBtn.title = "Stop download";
-        stopBtn.onclick = () => { ipcRenderer.send("stop-download", video.url); stopBtn.disabled=true; };
-        videoDiv.appendChild(stopBtn);
-    }
-    stopBtn.disabled=false;
-};
 
 
 ipcRenderer.on("download-progress", (event, {url,data})=>{
@@ -661,11 +673,12 @@ pasteBtn.addEventListener("click", async () => {
 
 // ------------------ DOWNLOAD ALL ------------------
 if(downloadAllBtn){
-    downloadAllBtn.addEventListener("click", ()=>{
-        videos.forEach((_,idx)=>window.downloadVideo(idx));
+    downloadAllBtn.addEventListener("click", () => {
+        videos.forEach((_, idx) => {
+            downloadLimiter.schedule(() => actualDownloadVideo(idx));
+        });
     });
 }
-
 // Pulisce il log quando la textarea è vuota
 urlArea.addEventListener("input", () => {
     if (!urlArea.value.trim()) {
@@ -796,6 +809,53 @@ ipcRenderer.on("download-binaries-progress", (event, { percent }) => {
     const currentMsg = document.getElementById("download-status").innerText || "Downloading...";
     setDownloadProgressInner(percent, currentMsg);
 });
+const resetFormBtn = document.getElementById("resetFormBtn");
+
+if (resetFormBtn) {
+    resetFormBtn.addEventListener("click", async () => {
+        console.log("♻️ Reset Form clicked");
+
+        if (!urlArea) return;
+
+        // Mostra messaggio temporaneo nella textarea
+        urlArea.value = "🔄 I'm reloading the videos, make sure you've downloaded the binaries...";
+        urlArea.disabled = true;
+
+        // Pulisci lista video e DOM
+        videos = [];
+        if (videoList) videoList.innerHTML = "";
+
+        // Nascondi bottoni globali
+        if (clearListBtn) clearListBtn.style.display = "none";
+        const groupBox = document.getElementById("groupBox");
+        if (groupBox) {
+            groupBox.style.opacity = 0;
+            setTimeout(() => { groupBox.style.display = "none"; }, 300);
+        }
+
+        // Ricarica link dalle impostazioni
+        const settings = await ipcRenderer.invoke("get-settings");
+        if (settings.links && settings.links.length > 0) {
+            settings.links.forEach(url => addVideo(url));
+        }
+
+        // Salva settings aggiornati
+        saveSettingsToMain();
+
+        // Funzione per rimuovere il messaggio appena compare almeno una miniatura
+        const checkThumbnails = setInterval(() => {
+            const anyThumbnail = document.querySelector(".video-item img.thumbnail");
+            if (anyThumbnail) {
+                urlArea.value = "";
+                urlArea.disabled = false;
+                urlArea.focus();
+                clearInterval(checkThumbnails);
+            }
+        }, 200); // Controlla ogni 200ms
+    });
+}
+
+
 
 // --- fine file ---
 window.addVideo = addVideo;
