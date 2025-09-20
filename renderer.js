@@ -18,8 +18,8 @@ function isValidUrl(string) {
 }
 // Limiter globale: massimo 2 download simultanei, 500ms tra richieste
 const downloadLimiter = new Bottleneck({
-    maxConcurrent: 5,
-    minTime: 500
+    maxConcurrent: 50,
+    minTime: 0
 });
 // ------------------ DOM ELEMENTS ------------------
 const urlArea = document.getElementById("urlArea");
@@ -465,7 +465,7 @@ if (urlArea) {
 function fetchVideoDetails(video){
     if(!binPaths?.ytDlp) return;
     const args = ["-j"];
-    if(!playlistChk.checked) args.push("--no-playlist");
+    if(!playlistChk.checked) args.push("--flat-playlist");
     args.push(video.url);
 
     const proc = spawn(binPaths.ytDlp, args);
